@@ -83,7 +83,6 @@ function Login({ onLogin }: LoginProps) {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-
         <button
           className="btn btn-primary w-100 mb-3 fw-semibold"
           onClick={isRegister ? register : login}

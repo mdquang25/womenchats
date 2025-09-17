@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { db, auth } from "./firebase";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import Loading from "./Loading";
 
 interface User {
   uid: string;
@@ -93,7 +94,7 @@ function Sidebar({ onSelectUser }: SidebarProps) {
       {/* Friends List */}
       <div className="flex-grow-1 overflow-auto">
         {loading ? (
-          <div className="p-3 text-muted text-center">Loading...</div>
+          <Loading />
         ) : filtered.length === 0 ? (
           <div className="p-3 text-muted text-center">No users found</div>
         ) : (

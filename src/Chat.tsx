@@ -92,7 +92,12 @@ function Chat({ selectedUser }: ChatProps) {
     <div className="d-flex flex-column h-100">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center border-bottom p-2">
-        <h5 className="mb-0 text-primary">💬 Chat with {selectedUser.name}</h5>
+        <h5 className="mb-0 text-primary">
+          <image className="me-2">
+            <img src="./src/assets/chat_4_64.ico" alt={selectedUser.name} />
+          </image>
+          {selectedUser.name}
+        </h5>
         <button
           className="btn btn-outline-danger btn-sm"
           onClick={() => signOut(auth)}
