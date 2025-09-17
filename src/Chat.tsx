@@ -94,7 +94,7 @@ function Chat({ selectedUser }: ChatProps) {
       <div className="d-flex justify-content-between align-items-center border-bottom p-2">
         <h5 className="mb-0 text-primary">
           <image className="me-2">
-            <img src="./src/assets/chat_4_64.ico" alt={selectedUser.name} />
+            <img src="chat_4_64.ico" alt={selectedUser.name} />
           </image>
           {selectedUser.name}
         </h5>
