@@ -11,15 +11,14 @@ import {
   setDoc,
   getDoc,
 } from "firebase/firestore";
-import { signOut } from "firebase/auth";
 import type { User } from "./models/User";
 import type { Message } from "./models/Message";
 
-interface ChatProps {
+interface ChatBoxProps {
   selectedUser: User;
 }
 
-function Chat({ selectedUser }: ChatProps) {
+function ChatBox({ selectedUser }: ChatBoxProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const chatEndRef = useRef<HTMLDivElement | null>(null);
@@ -98,16 +97,13 @@ function Chat({ selectedUser }: ChatProps) {
           </image>
           {selectedUser.name}
         </h5>
-        <button
-          className="btn btn-outline-danger btn-sm"
-          onClick={() => signOut(auth)}
-        >
-          Logout
-        </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-grow-1 p-3 overflow-auto">
+      <div
+        className="flex-grow-1 p-3 overflow-auto"
+        style={{ minHeight: 0 }} // ensures scroll works in all flexbox layouts
+      >
         {messages.map((m) => (
           <div
             key={m.id}
@@ -133,18 +129,21 @@ function Chat({ selectedUser }: ChatProps) {
       </div>
 
       {/* Input */}
-      <div className="border-top p-2">
+      <div className="p-3 me-2">
         <div className="input-group">
           <input
             type="text"
-            className="form-control"
+            className="form-control editable rounded-pill me-2"
             placeholder="Type a message..."
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           />
-          <button className="btn btn-primary" onClick={sendMessage}>
-            Send
+          <button
+            className="btn btn-success rounded-pill"
+            onClick={sendMessage}
+          >
+            <i className="bi bi-send" />
           </button>
         </div>
       </div>
@@ -152,4 +151,4 @@ function Chat({ selectedUser }: ChatProps) {
   );
 }
 
-export default Chat;
+export default ChatBox;

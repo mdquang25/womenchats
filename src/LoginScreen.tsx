@@ -7,11 +7,12 @@ import {
 import { doc, setDoc } from "firebase/firestore";
 import type { User } from "./models/User";
 
-interface LoginProps {
+interface LoginScreenProps {
   onLogin: () => void;
+  showToast: (message: string, type: "success" | "error") => void;
 }
 
-function Login({ onLogin }: LoginProps) {
+function LoginScreen({ onLogin, showToast }: LoginScreenProps) {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
@@ -23,20 +24,20 @@ function Login({ onLogin }: LoginProps) {
       const uid = res.user.uid;
       const user: User = { uid, name, email };
       await setDoc(doc(db, "users", uid), user);
-      alert("Đăng ký thành công!");
+      showToast("Đăng ký thành công!", "success");
       onLogin();
     } catch (err: any) {
-      alert("Lỗi đăng ký: " + err.message);
+      showToast("Lỗi đăng ký: " + err.message, "error");
     }
   };
 
   const login = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      alert("Đăng nhập thành công!");
+      showToast("Đăng nhập thành công!", "success");
       onLogin();
     } catch (err: any) {
-      alert("Lỗi đăng nhập: " + err.message);
+      showToast("Lỗi đăng nhập: " + err.message, "error");
     }
   };
 
@@ -106,4 +107,4 @@ function Login({ onLogin }: LoginProps) {
   );
 }
 
-export default Login;
+export default LoginScreen;
