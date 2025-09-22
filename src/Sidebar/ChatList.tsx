@@ -1,16 +1,10 @@
 import { useState, useEffect } from "react";
 import { db, auth } from "../firebase";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit as fsLimit,
-} from "firebase/firestore";
+import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import Loading from "../utils/Loading";
 import type { User } from "../models/User";
 import type { Friendship } from "../models/Friendship";
+import type { Chat } from "../models/Chat";
 
 interface ChatListProps {
   onSelectUser: (user: User) => void;
@@ -34,7 +28,7 @@ function ChatList({ onSelectUser }: ChatListProps) {
       if (!currentUid) return;
       setLoading(true);
 
-      // 1. Get all accepted friendships for current user
+      // 1. Get all accepted friendships
       const friendshipQuery = query(
         collection(db, "friendships"),
         where("participants", "array-contains", currentUid),
@@ -58,7 +52,7 @@ function ChatList({ onSelectUser }: ChatListProps) {
         return;
       }
 
-      // 3. Fetch user info for each friend
+      // 3. Fetch friend info
       const usersQuery = query(
         collection(db, "users"),
         where("__name__", "in", friendUids)
@@ -69,32 +63,30 @@ function ChatList({ onSelectUser }: ChatListProps) {
         ...(doc.data() as Omit<User, "uid">),
       }));
 
-      // 4. For each friend, get last message
-      const friendsWithPreview: FriendWithPreview[] = await Promise.all(
-        users.map(async (user) => {
-          const chatId = [currentUid, user.uid].sort().join("_");
-          const msgQuery = query(
-            collection(db, "chats", chatId, "messages"),
-            orderBy("timestamp", "desc"),
-            fsLimit(1)
-          );
-          const msgSnap = await getDocs(msgQuery);
-          let lastMsgTime = 0;
-          let lastMsgText = "";
-          if (!msgSnap.empty) {
-            const msg = msgSnap.docs[0].data();
-            lastMsgTime = msg.timestamp?.toMillis?.() || 0;
-            lastMsgText = msg.text || "";
-          }
-          return {
-            ...user,
-            lastMsgTime,
-            lastMsgText,
-          };
-        })
+      // 4. Fetch chats to get last message
+      const chatsQuery = query(
+        collection(db, "chats"),
+        where("participants", "array-contains", currentUid),
+        orderBy("updatedAt", "desc")
       );
+      const chatsSnap = await getDocs(chatsQuery);
+      const chats: Chat[] = chatsSnap.docs.map((doc) => ({
+        cid: doc.id,
+        ...(doc.data() as Omit<Chat, "cid">),
+      }));
 
-      // 5. Sort by lastMsgTime desc
+      // 5. Merge: attach lastMessage + updatedAt to each friend
+      const friendsWithPreview: FriendWithPreview[] = users.map((user) => {
+        const chatId = [currentUid, user.uid].sort().join("_");
+        const chat = chats.find((c) => c.cid === chatId);
+        return {
+          ...user,
+          lastMsgTime: chat?.updatedAt?.toMillis?.() || 0,
+          lastMsgText: chat?.lastMessage || "No messages yet",
+        };
+      });
+
+      // 6. Sort by lastMsgTime
       friendsWithPreview.sort((a, b) => b.lastMsgTime - a.lastMsgTime);
 
       setFriends(friendsWithPreview);
@@ -105,7 +97,7 @@ function ChatList({ onSelectUser }: ChatListProps) {
     fetchFriends();
   }, [currentUid]);
 
-  // filter as you type
+  // Filter by search
   useEffect(() => {
     if (!search.trim()) {
       setFiltered(friends);
@@ -121,7 +113,7 @@ function ChatList({ onSelectUser }: ChatListProps) {
   }, [search, friends]);
 
   return (
-    <div className="flex-1 d-flex p-2 flex-column border-end bg-white">
+    <div className="flex-1 d-flex h-100 p-2 flex-column border-end bg-white">
       {/* Search */}
       <div className="p-3 border-bottom">
         <input
@@ -156,11 +148,9 @@ function ChatList({ onSelectUser }: ChatListProps) {
               <div>
                 <div className="fw-bold">{user.name || user.email}</div>
                 <small className="text-muted">
-                  {user.lastMsgText
-                    ? user.lastMsgText.length > 32
-                      ? user.lastMsgText.slice(0, 32) + "..."
-                      : user.lastMsgText
-                    : "No messages yet"}
+                  {user.lastMsgText.length > 32
+                    ? user.lastMsgText.slice(0, 32) + "..."
+                    : user.lastMsgText}
                 </small>
               </div>
             </div>

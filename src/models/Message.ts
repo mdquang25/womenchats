@@ -5,5 +5,5 @@ export interface Message {
   text: string;
   senderId: string;
   deleted: boolean;
-  timestamp?: Timestamp;
+  timestamp: Timestamp;
 }

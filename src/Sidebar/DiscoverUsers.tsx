@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
+import { doc, setDoc } from "firebase/firestore";
 import {
   collection,
   getDocs,
-  addDoc,
   query,
   where,
   limit,
@@ -123,20 +123,23 @@ function DiscoverUsers() {
   const handleSendRequest = async (user: User) => {
     if (!currentUid) return;
     setSending(user.uid);
-    await addDoc(collection(db, "friendships"), {
-      participants: [currentUid, user.uid],
+
+    const friendshipId = [currentUid, user.uid].sort().join("_"); // tạo ID cố định
+    await setDoc(doc(db, "friendships", friendshipId), {
+      participants: [currentUid, user.uid].sort(),
       status: "pending",
       requestBy: currentUid,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
+
     setSent((prev) => [...prev, user.uid]);
     setSending(null);
   };
 
   return (
-    <div className="flex-1 p-2">
-      <h5>Discover Users</h5>
+    <div className="flex-1 d-flex h-100 p-2 flex-column border-end bg-white">
+      <div className="fw-bold fs-6">Discover Users</div>
       <input
         className="form-control mb-3"
         placeholder="Search by name or email"
@@ -150,14 +153,13 @@ function DiscoverUsers() {
       ) : (
         <ul className="list-group">
           {suggested.map((user) => (
-            <li
-              key={user.uid}
-              className="list-group-item d-flex justify-content-between align-items-center"
-            >
+            <li key={user.uid} className="list-group-item d-flex flex-column">
               <div>
                 <div>{user.name}</div>
                 <div className="text-muted" style={{ fontSize: 12 }}>
-                  {user.email}
+                  {user.email.length > 30
+                    ? user.email.slice(0, 30) + "..."
+                    : user.email}
                 </div>
               </div>
               <button

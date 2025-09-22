@@ -1,3 +1,4 @@
+// Sidebar.tsx
 import { useState } from "react";
 import type { User } from "../models/User";
 import ChatsList from "./ChatList";
@@ -6,9 +7,9 @@ import DiscoverUsers from "./DiscoverUsers";
 import AppSettings from "./AppSettings";
 import AccountSettings from "./AccountSettings";
 
-// Add Bootstrap Icons CDN in your index.html or install react-icons/bootstrap-icons if not already
-
 interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
   onSelectUser: (user: User) => void;
 }
 
@@ -31,43 +32,107 @@ const navItems = [
   },
 ];
 
-function Sidebar({ onSelectUser }: SidebarProps) {
+function Sidebar({ isOpen, onClose, onSelectUser }: SidebarProps) {
   const [selected, setSelected] = useState<NavOption>("chats");
 
+  // wrapper để truyền xuống ChatsList: đóng sidebar trên mobile sau khi chọn
+  const handleSelectUser = (user: User) => {
+    onSelectUser(user);
+    // gọi onClose để đóng mobile sidebar (MainScreen sẽ ignore nếu desktop)
+    onClose();
+  };
+
   return (
-    <div
-      className="d-flex"
-      style={{ height: "100vh", width: "30%", minWidth: 200 }}
-    >
-      {/* NavBar */}
+    <>
+      {/* Overlay (mobile only) */}
       <div
-        className="d-flex flex-column border-end bg-light"
-        style={{ width: 60 }}
+        className={`d-md-none position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-25 ${
+          isOpen ? "d-block" : "d-none"
+        }`}
+        style={{ zIndex: 1040 }}
+        onClick={onClose}
+      />
+
+      {/* Mobile sliding sidebar */}
+      <div
+        className="position-fixed d-md-none top-0 start-0 h-100 bg-white shadow"
+        style={{
+          zIndex: 1050,
+          width: "80%",
+          maxWidth: 320,
+          transform: isOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 240ms ease-in-out",
+        }}
       >
-        {navItems.map((item) => (
-          <button
-            key={item.key}
-            className={`btn btn-link py-3 ${
-              selected === item.key ? "bg-primary text-white" : "text-dark"
-            }`}
-            style={{ border: "none", borderRadius: 0 }}
-            onClick={() => setSelected(item.key as NavOption)}
-            title={item.label}
+        <div className="d-flex" style={{ height: "100%" }}>
+          {/* icon nav */}
+          <div
+            className="d-flex flex-column border-end bg-light"
+            style={{ width: 60 }}
           >
-            <i className={`bi ${item.icon} fs-4`} />
-          </button>
-        ))}
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                className={`btn btn-link py-3 ${
+                  selected === item.key ? "bg-primary text-white" : "text-dark"
+                }`}
+                style={{ border: "none", borderRadius: 0 }}
+                onClick={() => setSelected(item.key as NavOption)}
+                title={item.label}
+              >
+                <i className={`bi ${item.icon} fs-4`} />
+              </button>
+            ))}
+          </div>
+
+          {/* nội dung */}
+          <div className="flex-grow-1" style={{ minWidth: 200 }}>
+            {selected === "chats" && (
+              <ChatsList onSelectUser={handleSelectUser} />
+            )}
+            {selected === "friendRequests" && <FriendRequests />}
+            {selected === "discover" && <DiscoverUsers />}
+            {selected === "appSettings" && <AppSettings />}
+            {selected === "accountSettings" && <AccountSettings />}
+          </div>
+        </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-grow-1" style={{ minWidth: 250 }}>
-        {selected === "chats" && <ChatsList onSelectUser={onSelectUser} />}
-        {selected === "friendRequests" && <FriendRequests />}
-        {selected === "discover" && <DiscoverUsers />}
-        {selected === "appSettings" && <AppSettings />}
-        {selected === "accountSettings" && <AccountSettings />}
+      {/* Desktop sidebar (static) */}
+      <div
+        className="d-none d-md-flex position-static flex-column border-end bg-white"
+        style={{ width: 320, height: "100vh" }}
+      >
+        <div className="d-flex" style={{ height: "100%" }}>
+          <div
+            className="d-flex flex-column border-end bg-light"
+            style={{ width: 60 }}
+          >
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                className={`btn btn-link py-3 ${
+                  selected === item.key ? "bg-primary text-white" : "text-dark"
+                }`}
+                style={{ border: "none", borderRadius: 0 }}
+                onClick={() => setSelected(item.key as NavOption)}
+                title={item.label}
+              >
+                <i className={`bi ${item.icon} fs-4`} />
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-grow-1" style={{ minWidth: 240 }}>
+            {selected === "chats" && <ChatsList onSelectUser={onSelectUser} />}
+            {selected === "friendRequests" && <FriendRequests />}
+            {selected === "discover" && <DiscoverUsers />}
+            {selected === "appSettings" && <AppSettings />}
+            {selected === "accountSettings" && <AccountSettings />}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -10,6 +10,7 @@ import {
   where,
   orderBy,
   serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 import type { Friendship } from "../models/Friendship";
 import type { User } from "../models/User";
@@ -82,6 +83,14 @@ function FriendRequests() {
       status: "accepted",
       updatedAt: serverTimestamp(),
     });
+    const friendship = received.find((f) => f.id === id);
+    if (!friendship) return;
+    await setDoc(doc(db, "chats", friendship.id), {
+      participants: friendship?.participants,
+      lastMessage: "",
+      updatedAt: serverTimestamp(),
+    });
+
     // Refresh list
     setReceived((prev) => prev.filter((f) => f.id !== id));
   };
@@ -99,7 +108,7 @@ function FriendRequests() {
   };
 
   return (
-    <div className="flex-1 p-2">
+    <div className="flex-1 d-flex h-100 p-2 flex-column border-end bg-white">
       <div className="fw-bold fs-6">Received Friend Requests</div>
       {loading ? (
         <Loading />
@@ -108,14 +117,13 @@ function FriendRequests() {
       ) : (
         <ul className="list-group mb-4">
           {received.map((f) => (
-            <li
-              key={f.id}
-              className="list-group-item d-flex justify-content-between align-items-center"
-            >
+            <li key={f.id} className="list-group-item d-flex flex-column">
               <div>
                 <div>{f.user.name}</div>
                 <div className="text-muted" style={{ fontSize: 12 }}>
-                  {f.user.email}
+                  {f.user.email.length > 30
+                    ? f.user.email.slice(0, 30) + "..."
+                    : f.user.email}
                 </div>
               </div>
               <div>
@@ -145,14 +153,13 @@ function FriendRequests() {
       ) : (
         <ul className="list-group">
           {sent.map((f) => (
-            <li
-              key={f.id}
-              className="list-group-item d-flex justify-content-between align-items-center"
-            >
+            <li key={f.id} className="list-group-item d-flex flex-column">
               <div>
                 <div>{f.user.name}</div>
                 <div className="text-muted" style={{ fontSize: 12 }}>
-                  {f.user.email}
+                  {f.user.email.length > 30
+                    ? f.user.email.slice(0, 30) + "..."
+                    : f.user.email}
                 </div>
               </div>
               <button
