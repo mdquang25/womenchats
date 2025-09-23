@@ -4,68 +4,73 @@ service cloud.firestore {
 
     // ========== USERS ==========
     match /users/{userId} {
-      // Ai đã đăng nhập thì đọc được thông tin profile
-      allow read: if request.auth != null;
-
-      // Chỉ cho phép user tự tạo/sửa hồ sơ của mình
       allow create: if request.auth != null && request.auth.uid == userId;
-      allow update, delete: if request.auth.uid == userId;
+      allow read, update, delete: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true;
     }
 
     // ========== FRIENDSHIPS ==========
     match /friendships/{fid} {
-  allow read: if request.auth != null 
-              && request.auth.uid in resource.data.participants;
-  allow create: if request.auth != null
-    && request.auth.uid == request.resource.data.requestBy
-    && request.resource.data.status == "pending";
+      allow read: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.uid in resource.data.participants;
 
-  // Cập nhật: chỉ receiver được phép accept
-  allow update: if request.auth != null
-    && request.auth.uid in resource.data.participants
-    && (
-      // Trường hợp update status từ pending -> accepted
-      (resource.data.status == "pending"
-        && request.resource.data.status == "accepted"
-        && request.auth.uid != resource.data.requestBy)
-      // hoặc chỉ update metadata (updatedAt)
-    );
-  // Cho phép cả sender và receiver được xoá
-  allow delete: if request.auth != null 
-                && request.auth.uid in resource.data.participants;
-}
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.uid == request.resource.data.requestBy
+        && request.resource.data.status == "pending";
+
+      allow update: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.uid in resource.data.participants
+        && (
+          (resource.data.status == "pending"
+            && request.resource.data.status == "accepted"
+            && request.auth.uid != resource.data.requestBy)
+        );
+
+      allow delete: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.uid in resource.data.participants;
+    }
 
     // ========== CHATS ==========
     match /chats/{chatId} {
-      // Chỉ participants được phép đọc chat
       allow read: if request.auth != null
+        && request.auth.token.email_verified == true
         && request.auth.uid in resource.data.participants;
 
-      // Tạo chat: chỉ cho khi 2 user đã là bạn bè
       allow create: if request.auth != null
+        && request.auth.token.email_verified == true
         && request.auth.uid in request.resource.data.participants
         && isFriend(request.resource.data.participants);
 
-      // Cập nhật chat (ví dụ lastMessage, updatedAt)
       allow update: if request.auth != null
+        && request.auth.token.email_verified == true
         && request.auth.uid in resource.data.participants;
 
-      // Không cho xoá chat
       allow delete: if false;
 
       // ----- MESSAGES -----
       match /messages/{messageId} {
-        // Chỉ participants được phép đọc
         allow read: if request.auth != null
+          && request.auth.token.email_verified == true
           && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
 
-        // Chỉ cho phép gửi tin nhắn khi là bạn bè
         allow create: if request.auth != null
+          && request.auth.token.email_verified == true
           && request.auth.uid == request.resource.data.senderId
           && isFriend(get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
 
-        // Không cho update/delete tin nhắn
-        allow update, delete: if false;
+        // Sender có thể update text, deleted, timestamp
+        allow update: if request.auth != null
+          && request.auth.token.email_verified == true
+          && request.auth.uid == resource.data.senderId
+          && request.resource.data.keys().hasOnly(["text","deleted","timestamp","senderId"])
+          && request.resource.data.senderId == resource.data.senderId;
+
+        allow delete: if false;
       }
     }
 
