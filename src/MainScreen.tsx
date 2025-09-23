@@ -29,7 +29,7 @@ function MainScreen() {
         ) : (
           <div className="d-flex flex-column h-100">
             {/* Header */}
-            <div className="d-flex justify-content-between align-items-center border-bottom p-2">
+            <div className="d-flex justify-content-end align-items-center border-bottom p-2">
               <button
                 className="btn btn-light d-md-none me-2"
                 onClick={() => setSidebarOpen(true)}

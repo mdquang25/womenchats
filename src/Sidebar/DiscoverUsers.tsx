@@ -139,10 +139,10 @@ function DiscoverUsers() {
 
   return (
     <div className="flex-1 d-flex h-100 p-2 flex-column border-end bg-white">
-      <div className="fw-bold fs-6">Discover Users</div>
+      <div className="fw-bold fs-6">Tìm kiếm bạn mới</div>
       <input
         className="form-control mb-3"
-        placeholder="Search by name or email"
+        placeholder="Nhập tên hoặc email.."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
@@ -153,7 +153,10 @@ function DiscoverUsers() {
       ) : (
         <ul className="list-group">
           {suggested.map((user) => (
-            <li key={user.uid} className="list-group-item d-flex flex-column">
+            <li
+              key={user.uid}
+              className="card mt-2 shadow list-group-item d-flex flex-column"
+            >
               <div>
                 <div>{user.name}</div>
                 <div className="text-muted" style={{ fontSize: 12 }}>

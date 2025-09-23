@@ -1,24 +1,14 @@
 import { useState, useEffect } from "react";
 import { db, auth } from "../firebase";
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import Loading from "../utils/Loading";
 import type { User } from "../models/User";
 import type { Friendship } from "../models/Friendship";
-import type { Chat } from "../models/Chat";
 
-interface ChatListProps {
-  onSelectUser: (user: User) => void;
-}
-
-interface FriendWithPreview extends User {
-  lastMsgTime: number;
-  lastMsgText: string;
-}
-
-function ChatList({ onSelectUser }: ChatListProps) {
+function FriendList() {
   const [search, setSearch] = useState("");
-  const [friends, setFriends] = useState<FriendWithPreview[]>([]);
-  const [filtered, setFiltered] = useState<FriendWithPreview[]>([]);
+  const [friends, setFriends] = useState<User[]>([]);
+  const [filtered, setFiltered] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   const currentUid = auth.currentUser?.uid;
@@ -63,37 +53,10 @@ function ChatList({ onSelectUser }: ChatListProps) {
         ...(doc.data() as Omit<User, "uid">),
       }));
 
-      // 4. Fetch chats to get last message
-      const chatsQuery = query(
-        collection(db, "chats"),
-        where("participants", "array-contains", currentUid),
-        orderBy("updatedAt", "desc")
-      );
-      const chatsSnap = await getDocs(chatsQuery);
-      const chats: Chat[] = chatsSnap.docs.map((doc) => ({
-        cid: doc.id,
-        ...(doc.data() as Omit<Chat, "cid">),
-      }));
-
-      // 5. Merge: attach lastMessage + updatedAt to each friend
-      const friendsWithPreview: FriendWithPreview[] = users.map((user) => {
-        const chatId = [currentUid, user.uid].sort().join("_");
-        const chat = chats.find((c) => c.cid === chatId);
-        return {
-          ...user,
-          lastMsgTime: chat?.updatedAt?.toMillis?.() || 0,
-          lastMsgText: chat?.lastMessage || "No messages yet",
-        };
-      });
-
-      // 6. Sort by lastMsgTime
-      friendsWithPreview.sort((a, b) => b.lastMsgTime - a.lastMsgTime);
-
-      setFriends(friendsWithPreview);
-      setFiltered(friendsWithPreview);
+      setFriends(users);
+      setFiltered(users);
       setLoading(false);
     };
-
     fetchFriends();
   }, [currentUid]);
 
@@ -114,13 +77,13 @@ function ChatList({ onSelectUser }: ChatListProps) {
 
   return (
     <div className="flex-1 d-flex h-100 p-2 flex-column border-end bg-white">
-      <div className="fs-6 fw-bold p-2 border-bottom">Cuộc trò chuyện</div>
+      <div className="fs-6 fw-bold p-2 border-bottom">Bạn bè</div>
       {/* Search */}
       <div className="p-2 border-bottom">
         <input
           type="text"
           className="form-control"
-          placeholder="Tìm kiếm..."
+          placeholder="Tìm kiếm bạn bè..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -138,7 +101,6 @@ function ChatList({ onSelectUser }: ChatListProps) {
               key={user.uid}
               className="p-2 border-bottom d-flex align-items-center hover-bg"
               style={{ cursor: "pointer" }}
-              onClick={() => onSelectUser(user)}
             >
               <div
                 className="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center me-2"
@@ -149,9 +111,9 @@ function ChatList({ onSelectUser }: ChatListProps) {
               <div>
                 <div className="fw-bold">{user.name || user.email}</div>
                 <small className="text-muted">
-                  {user.lastMsgText.length > 32
-                    ? user.lastMsgText.slice(0, 32) + "..."
-                    : user.lastMsgText}
+                  {user.email.length > 30
+                    ? user.email.slice(0, 30) + "..."
+                    : user.email}
                 </small>
               </div>
             </div>
@@ -162,4 +124,4 @@ function ChatList({ onSelectUser }: ChatListProps) {
   );
 }
 
-export default ChatList;
+export default FriendList;

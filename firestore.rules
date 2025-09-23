@@ -16,10 +16,20 @@ service cloud.firestore {
     match /friendships/{fid} {
   allow read: if request.auth != null 
               && request.auth.uid in resource.data.participants;
-  allow create: if request.auth != null 
-                && request.auth.uid in request.resource.data.participants;
-  allow update: if request.auth != null 
-                && request.auth.uid in resource.data.participants;
+  allow create: if request.auth != null
+    && request.auth.uid == request.resource.data.requestBy
+    && request.resource.data.status == "pending";
+
+  // Cập nhật: chỉ receiver được phép accept
+  allow update: if request.auth != null
+    && request.auth.uid in resource.data.participants
+    && (
+      // Trường hợp update status từ pending -> accepted
+      (resource.data.status == "pending"
+        && request.resource.data.status == "accepted"
+        && request.auth.uid != resource.data.requestBy)
+      // hoặc chỉ update metadata (updatedAt)
+    );
   // Cho phép cả sender và receiver được xoá
   allow delete: if request.auth != null 
                 && request.auth.uid in resource.data.participants;

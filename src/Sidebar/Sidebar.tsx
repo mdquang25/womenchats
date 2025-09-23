@@ -2,6 +2,7 @@
 import { useState } from "react";
 import type { User } from "../models/User";
 import ChatsList from "./ChatList";
+import FriendList from "./FriendList";
 import FriendRequests from "./FriendRquests";
 import DiscoverUsers from "./DiscoverUsers";
 import AppSettings from "./AppSettings";
@@ -15,6 +16,7 @@ interface SidebarProps {
 
 type NavOption =
   | "chats"
+  | "friends"
   | "friendRequests"
   | "discover"
   | "appSettings"
@@ -22,6 +24,7 @@ type NavOption =
 
 const navItems = [
   { key: "chats", label: "Chats", icon: "bi-chat-dots" },
+  { key: "friends", label: "Friends", icon: "bi-person-check" },
   { key: "friendRequests", label: "Friend Requests", icon: "bi-person-plus" },
   { key: "discover", label: "Discover Users", icon: "bi-search" },
   { key: "appSettings", label: "App Settings", icon: "bi-gear" },
@@ -90,6 +93,7 @@ function Sidebar({ isOpen, onClose, onSelectUser }: SidebarProps) {
             {selected === "chats" && (
               <ChatsList onSelectUser={handleSelectUser} />
             )}
+            {selected === "friends" && <FriendList />}
             {selected === "friendRequests" && <FriendRequests />}
             {selected === "discover" && <DiscoverUsers />}
             {selected === "appSettings" && <AppSettings />}
@@ -125,6 +129,7 @@ function Sidebar({ isOpen, onClose, onSelectUser }: SidebarProps) {
 
           <div className="flex-grow-1" style={{ minWidth: 240 }}>
             {selected === "chats" && <ChatsList onSelectUser={onSelectUser} />}
+            {selected === "friends" && <FriendList />}
             {selected === "friendRequests" && <FriendRequests />}
             {selected === "discover" && <DiscoverUsers />}
             {selected === "appSettings" && <AppSettings />}

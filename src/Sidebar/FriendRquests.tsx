@@ -109,11 +109,11 @@ function FriendRequests() {
 
   return (
     <div className="flex-1 d-flex h-100 p-2 flex-column border-end bg-white">
-      <div className="fw-bold fs-6">Received Friend Requests</div>
+      <div className="fw-bold fs-6">Lời mời kết bạn</div>
       {loading ? (
         <Loading />
       ) : received.length === 0 ? (
-        <div>No received requests.</div>
+        <em className="text-muted">Không có lời mời nào.</em>
       ) : (
         <ul className="list-group mb-4">
           {received.map((f) => (
@@ -131,13 +131,13 @@ function FriendRequests() {
                   className="btn btn-sm btn-success me-2"
                   onClick={() => handleAccept(f.id)}
                 >
-                  Accept
+                  Chấp nhận
                 </button>
                 <button
                   className="btn btn-sm btn-outline-danger"
                   onClick={() => handleDecline(f.id)}
                 >
-                  Decline
+                  Từ chối
                 </button>
               </div>
             </li>
@@ -145,15 +145,18 @@ function FriendRequests() {
         </ul>
       )}
       <hr />
-      <div className="fw-bold fs-6 ">Sent Friend Requests</div>
+      <div className="fw-bold fs-6 ">Lời mời kết bạn đã gửi</div>
       {loading ? (
         <Loading />
       ) : sent.length === 0 ? (
-        <div>No sent requests.</div>
+        <em className="text-muted">Không có lời mời đã gửi.</em>
       ) : (
         <ul className="list-group">
           {sent.map((f) => (
-            <li key={f.id} className="list-group-item d-flex flex-column">
+            <li
+              key={f.id}
+              className="card mt-2 shadow list-group-item d-flex flex-column"
+            >
               <div>
                 <div>{f.user.name}</div>
                 <div className="text-muted" style={{ fontSize: 12 }}>
@@ -163,10 +166,10 @@ function FriendRequests() {
                 </div>
               </div>
               <button
-                className="btn btn-sm btn-outline-danger"
+                className="btn btn-sm btn-danger"
                 onClick={() => handleCancel(f.id)}
               >
-                Cancel
+                Thu hồi lời mời
               </button>
             </li>
           ))}

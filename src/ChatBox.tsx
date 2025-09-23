@@ -239,21 +239,21 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
     <div className="d-flex flex-column h-100">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center border-bottom p-2">
-        <button className="btn btn-light d-md-none me-2" onClick={onMenuClick}>
-          <i className="bi bi-list fs-4" />
-        </button>
         <h5 className="mb-0 text-primary">
           <span className="me-2">
             <img src="chat_4_64.ico" alt={selectedUser.name} width={32} />
           </span>
           {selectedUser.name}
         </h5>
+        <button className="btn btn-light d-md-none me-2" onClick={onMenuClick}>
+          <i className="bi bi-list fs-4" />
+        </button>
       </div>
 
       {/* Messages */}
       <div
         ref={chatBoxRef}
-        className="flex-grow-1 p-3 overflow-auto"
+        className="flex-grow-1 p-3 overflow-auto bg-danger bg-opacity-10"
         style={{ minHeight: 0 }}
       >
         {loadingMore && <Loading />}
@@ -267,9 +267,9 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
             }`}
           >
             <div
-              className={`p-2 rounded-3 shadow-sm ${
+              className={`p-2 rounded-3 shadow ${
                 m.senderId === currentUid
-                  ? "bg-primary text-white"
+                  ? "bg-success bg-opacity-75 text-white"
                   : "bg-white border"
               }`}
               style={{ maxWidth: "70%" }}

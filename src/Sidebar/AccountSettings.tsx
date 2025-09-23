@@ -3,6 +3,7 @@ import { signOut, updatePassword } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import type { User } from "../models/User";
+import Loading from "../utils/Loading";
 
 function AccountSettings() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -64,38 +65,38 @@ function AccountSettings() {
 
   return (
     <div className="flex-1 d-flex h-100 p-3 flex-column border-end bg-white">
-      <h6 className="fw-bold mb-3">Account Settings</h6>
+      <div className="fw-bold fs-6 p-2 border-bottom">Cài đặt tài khoản</div>
 
       {userData ? (
-        <div className="mb-3">
+        <div className="mt-3">
           <p>
-            <b>Name:</b> {userData.name || "No name"}
+            <b>Tên:</b> {userData.name || "Chưa có tên"}
           </p>
           <p>
             <b>Email:</b> {userData.email}
           </p>
         </div>
       ) : (
-        <p>Loading...</p>
+        <Loading />
       )}
 
       <button
         className="btn btn-outline-primary mb-2"
         onClick={() => setShowEditModal(true)}
       >
-        Edit Profile
+        Chỉnh sửa hồ sơ
       </button>
       <button
         className="btn btn-outline-warning mb-2"
         onClick={() => setShowPasswordModal(true)}
       >
-        Change Password
+        Đổi mật khẩu
       </button>
       <button
         className="btn btn-outline-danger mb-2"
         onClick={() => setShowLogoutModal(true)}
       >
-        Logout
+        Đăng xuất
       </button>
 
       {/* Logout Modal */}
@@ -107,7 +108,7 @@ function AccountSettings() {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Confirm Logout</h5>
+                <h5 className="modal-title">Xác nhận đăng xuất</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -115,17 +116,17 @@ function AccountSettings() {
                 />
               </div>
               <div className="modal-body">
-                <p>Are you sure you want to sign out?</p>
+                <p>Bạn có chắc chắn muốn đăng xuất không?</p>
               </div>
               <div className="modal-footer">
                 <button
                   className="btn btn-secondary"
                   onClick={() => setShowLogoutModal(false)}
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button className="btn btn-danger" onClick={confirmLogout}>
-                  Sign Out
+                  Đăng xuất
                 </button>
               </div>
             </div>
@@ -142,7 +143,7 @@ function AccountSettings() {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Change Password</h5>
+                <h5 className="modal-title">Đổi mật khẩu</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -153,7 +154,7 @@ function AccountSettings() {
                 <input
                   type="password"
                   className="form-control"
-                  placeholder="Enter new password"
+                  placeholder="Nhập mật khẩu mới"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                 />
@@ -163,13 +164,13 @@ function AccountSettings() {
                   className="btn btn-secondary"
                   onClick={() => setShowPasswordModal(false)}
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button
                   className="btn btn-warning"
                   onClick={handlePasswordChange}
                 >
-                  Update
+                  Cập nhật
                 </button>
               </div>
             </div>
@@ -186,7 +187,7 @@ function AccountSettings() {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Edit Profile</h5>
+                <h5 className="modal-title">Chỉnh sửa hồ sơ</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -197,7 +198,7 @@ function AccountSettings() {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Enter new name"
+                  placeholder="Nhập tên mới..."
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                 />
@@ -207,13 +208,13 @@ function AccountSettings() {
                   className="btn btn-secondary"
                   onClick={() => setShowEditModal(false)}
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button
                   className="btn btn-primary"
                   onClick={handleUpdateProfile}
                 >
-                  Save
+                  Lưu thay đổi
                 </button>
               </div>
             </div>
