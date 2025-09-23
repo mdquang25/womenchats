@@ -3,39 +3,68 @@ import { auth, db } from "./firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendEmailVerification,
+  signOut,
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import type { User } from "./models/User";
 
 interface LoginScreenProps {
-  onLogin: () => void;
+  onLogin: (bool: boolean) => void;
+  onRequireVerify: () => void; // 👈 điều hướng sang màn hình VerifyEmail
   showToast: (message: string, type: "success" | "error") => void;
 }
 
-function LoginScreen({ onLogin, showToast }: LoginScreenProps) {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [name, setName] = useState<string>("");
-  const [isRegister, setIsRegister] = useState<boolean>(false);
+function LoginScreen({
+  onLogin,
+  onRequireVerify,
+  showToast,
+}: LoginScreenProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [isRegister, setIsRegister] = useState(false);
 
+  // UC-01: Đăng ký
   const register = async () => {
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
       const uid = res.user.uid;
+
+      // Lưu user
       const user: User = { uid, name, email };
       await setDoc(doc(db, "users", uid), user);
-      showToast("Đăng ký thành công!", "success");
-      onLogin();
+
+      // Gửi email xác thực
+      await sendEmailVerification(res.user);
+
+      showToast(
+        "Đăng ký thành công! Vui lòng kiểm tra email để xác thực.",
+        "success"
+      );
+
+      // Đăng xuất
+      await signOut(auth);
+      onLogin(false); // quay về login
+      setIsRegister(false); // chuyển về tab login
     } catch (err: any) {
       showToast("Lỗi đăng ký: " + err.message, "error");
     }
   };
 
+  // UC-02: Đăng nhập
   const login = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const res = await signInWithEmailAndPassword(auth, email, password);
+
+      if (!res.user.emailVerified) {
+        showToast("Email chưa xác thực, vui lòng kiểm tra hộp thư.", "error");
+        onRequireVerify();
+        return;
+      }
+
       showToast("Đăng nhập thành công!", "success");
-      onLogin();
+      onLogin(true);
     } catch (err: any) {
       showToast("Lỗi đăng nhập: " + err.message, "error");
     }
@@ -84,6 +113,7 @@ function LoginScreen({ onLogin, showToast }: LoginScreenProps) {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
+
         <button
           className="btn btn-primary w-100 mb-3 fw-semibold"
           onClick={isRegister ? register : login}

@@ -1,20 +1,12 @@
-import Loading from "./utils/Loading";
-import Login from "./LoginScreen";
-import MainScreen from "./MainScreen";
 import { useState, useEffect } from "react";
 import { auth } from "./firebase";
+import Loading from "./utils/Loading";
+import LoginScreen from "./LoginScreen";
+import VerifyEmailScreen from "./VerifyEmailScreen";
+import MainScreen from "./MainScreen";
 import "./App.css";
 
-// Toast component
-function Toast({
-  message,
-  type,
-  onClose,
-}: {
-  message: string;
-  type: "success" | "error";
-  onClose: () => void;
-}) {
+function Toast({ message, type, onClose }: any) {
   return (
     <div
       className={`toast align-items-center text-bg-${
@@ -39,10 +31,10 @@ function Toast({
 }
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!auth.currentUser);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showVerifyScreen, setShowVerifyScreen] = useState(false);
 
-  // Toast state
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -55,31 +47,21 @@ function App() {
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((user) => {
-      setIsLoggedIn(!!user);
+      setIsLoggedIn(!!user && user.emailVerified);
       setLoading(false);
     });
     return unsub;
   }, []);
 
-  if (loading) {
-    return <Loading />;
-  } else if (!isLoggedIn) {
+  if (loading) return <Loading />;
+
+  if (showVerifyScreen) {
     return (
       <>
-        <Login onLogin={() => setIsLoggedIn(true)} showToast={showToast} />
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
-      </>
-    );
-  } else {
-    return (
-      <>
-        <MainScreen />
+        <VerifyEmailScreen
+          onBackToLogin={() => setShowVerifyScreen(false)}
+          showToast={showToast}
+        />
         {toast && (
           <Toast
             message={toast.message}
@@ -90,6 +72,38 @@ function App() {
       </>
     );
   }
+
+  if (!isLoggedIn) {
+    return (
+      <>
+        <LoginScreen
+          onLogin={setIsLoggedIn}
+          onRequireVerify={() => setShowVerifyScreen(true)}
+          showToast={showToast}
+        />
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <MainScreen />
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+    </>
+  );
 }
 
 export default App;
