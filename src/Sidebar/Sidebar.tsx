@@ -9,6 +9,8 @@ import AppSettings from "./AppSettings";
 import AccountSettings from "./AccountSettings";
 
 interface SidebarProps {
+  userData: User | null;
+  setUserData: React.Dispatch<React.SetStateAction<User | null>>;
   isOpen: boolean;
   onClose: () => void;
   onSelectUser: (user: User) => void;
@@ -35,7 +37,13 @@ const navItems = [
   },
 ];
 
-function Sidebar({ isOpen, onClose, onSelectUser }: SidebarProps) {
+function Sidebar({
+  userData,
+  setUserData,
+  isOpen,
+  onClose,
+  onSelectUser,
+}: SidebarProps) {
   const [selected, setSelected] = useState<NavOption>("chats");
 
   // wrapper để truyền xuống ChatsList: đóng sidebar trên mobile sau khi chọn
@@ -97,7 +105,9 @@ function Sidebar({ isOpen, onClose, onSelectUser }: SidebarProps) {
             {selected === "friendRequests" && <FriendRequests />}
             {selected === "discover" && <DiscoverUsers />}
             {selected === "appSettings" && <AppSettings />}
-            {selected === "accountSettings" && <AccountSettings />}
+            {selected === "accountSettings" && (
+              <AccountSettings userData={userData} setUserData={setUserData} />
+            )}
           </div>
         </div>
       </div>
@@ -109,22 +119,57 @@ function Sidebar({ isOpen, onClose, onSelectUser }: SidebarProps) {
       >
         <div className="d-flex" style={{ height: "100%" }}>
           <div
-            className="d-flex flex-column border-end bg-light"
-            style={{ width: 60 }}
+            className="d-flex flex-column border-end bg-dark"
+            style={{ minWidth: 60 }}
           >
-            {navItems.map((item) => (
-              <button
-                key={item.key}
-                className={`btn btn-link py-3 ${
-                  selected === item.key ? "bg-primary text-white" : "text-dark"
-                }`}
-                style={{ border: "none", borderRadius: 0 }}
-                onClick={() => setSelected(item.key as NavOption)}
-                title={item.label}
-              >
-                <i className={`bi ${item.icon} fs-4`} />
-              </button>
-            ))}
+            {navItems.map(
+              (item, key) =>
+                key < 5 && (
+                  <button
+                    key={item.key}
+                    className={`btn btn-link py-3 rounded-4 mx-1 my-2 ${
+                      selected === item.key
+                        ? "bg-secondary text-warning"
+                        : "text-white"
+                    }`}
+                    style={{ border: "none", paddingTop: 0, paddingBottom: 0 }}
+                    onClick={() => setSelected(item.key as NavOption)}
+                    title={item.label}
+                  >
+                    <i className={`bi ${item.icon} fs-4`} />
+                  </button>
+                )
+            )}
+            <button
+              key={navItems[5].key}
+              className={`rounded-circle mx-1 my-2  ${
+                selected === navItems[5].key
+                  ? "bg-success avatar-tab-active"
+                  : "text-dark"
+              }`}
+              style={{
+                border: "none",
+                borderRadius: 0,
+                paddingLeft: 0,
+                paddingRight: 0,
+              }}
+              onClick={() => setSelected(navItems[5].key as NavOption)}
+              title={navItems[5].label}
+            >
+              <img
+                className="rounded-circle"
+                style={{
+                  width: 48,
+                  height: 48,
+                  objectFit: "cover",
+                }}
+                src={
+                  userData?.avatarUrl ||
+                  "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg"
+                }
+                alt="Ảnh đại diện người dùng"
+              />
+            </button>
           </div>
 
           <div className="flex-grow-1" style={{ minWidth: 240 }}>
@@ -133,7 +178,9 @@ function Sidebar({ isOpen, onClose, onSelectUser }: SidebarProps) {
             {selected === "friendRequests" && <FriendRequests />}
             {selected === "discover" && <DiscoverUsers />}
             {selected === "appSettings" && <AppSettings />}
-            {selected === "accountSettings" && <AccountSettings />}
+            {selected === "accountSettings" && (
+              <AccountSettings userData={userData} setUserData={setUserData} />
+            )}
           </div>
         </div>
       </div>

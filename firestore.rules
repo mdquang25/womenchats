@@ -4,10 +4,11 @@ service cloud.firestore {
 
     // ========== USERS ==========
     match /users/{userId} {
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow read, update, delete: if request.auth != null
-        && request.auth.uid == userId
+      allow read: if request.auth != null
         && request.auth.token.email_verified == true;
+      allow create, update, delete: if request.auth != null
+      && request.auth.uid == userId
+      && request.auth.token.email_verified == true;
     }
 
     // ========== FRIENDSHIPS ==========

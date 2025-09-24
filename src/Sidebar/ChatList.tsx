@@ -131,7 +131,9 @@ function ChatList({ onSelectUser }: ChatListProps) {
         {loading ? (
           <Loading />
         ) : filtered.length === 0 ? (
-          <div className="p-3 text-muted text-center">No friends found</div>
+          <div className="p-3 text-muted text-center">
+            Không tìm thấy cuộc trò chuyện
+          </div>
         ) : (
           filtered.map((user) => (
             <div
@@ -149,8 +151,8 @@ function ChatList({ onSelectUser }: ChatListProps) {
               <div>
                 <div className="fw-bold">{user.name || user.email}</div>
                 <small className="text-muted">
-                  {user.lastMsgText.length > 32
-                    ? user.lastMsgText.slice(0, 32) + "..."
+                  {user.lastMsgText.length > 24
+                    ? user.lastMsgText.slice(0, 24) + "..."
                     : user.lastMsgText}
                 </small>
               </div>

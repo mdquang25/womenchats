@@ -5,7 +5,12 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import type { User } from "../models/User";
 import Loading from "../utils/Loading";
 
-function AccountSettings() {
+interface AccountSettingsProps {
+  userData: User | null;
+  setUserData: React.Dispatch<React.SetStateAction<User | null>>;
+}
+
+function AccountSettings({ userData, setUserData }: AccountSettingsProps) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -13,24 +18,7 @@ function AccountSettings() {
   const [newPassword, setNewPassword] = useState("");
   const [newName, setNewName] = useState("");
 
-  const [userData, setUserData] = useState<User | null>(null);
   const currentUid = auth.currentUser?.uid;
-
-  // 🔹 Load user info từ Firestore (users/{uid})
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!currentUid) return;
-      const userDoc = await getDoc(doc(db, "users", currentUid));
-      if (userDoc.exists()) {
-        setUserData({
-          uid: userDoc.id,
-          ...(userDoc.data() as Omit<User, "uid">),
-        });
-      }
-    };
-    fetchUser();
-  }, [currentUid]);
-
   // 🔹 Đăng xuất
   const confirmLogout = () => {
     signOut(auth);

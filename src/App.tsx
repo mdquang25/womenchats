@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { auth } from "./firebase";
+import { auth, db } from "./firebase";
+import { doc, getDoc } from "firebase/firestore";
 import Loading from "./utils/Loading";
 import LoginScreen from "./LoginScreen";
 import VerifyEmailScreen from "./VerifyEmailScreen";
 import MainScreen from "./MainScreen";
+import WelcomeScreen from "./WelcomeScreen";
 import "./App.css";
 
 function Toast({ message, type, onClose }: any) {
@@ -34,6 +36,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showVerifyScreen, setShowVerifyScreen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState<boolean | null>(false);
 
   const [toast, setToast] = useState<{
     message: string;
@@ -46,8 +49,17 @@ function App() {
   };
 
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged((user) => {
-      setIsLoggedIn(!!user && user.emailVerified);
+    const unsub = auth.onAuthStateChanged(async (user) => {
+      if (user && user.emailVerified) {
+        // ✅ Check Firestore xem user đã có hồ sơ chưa
+        const userRef = doc(db, "users", user.uid);
+        const snap = await getDoc(userRef);
+        setShowWelcome(!snap.exists());
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+        setShowWelcome(false);
+      }
       setLoading(false);
     });
     return unsub;
@@ -91,7 +103,23 @@ function App() {
       </>
     );
   }
-
+  if (showWelcome) {
+    return (
+      <>
+        <WelcomeScreen
+          onLogin={() => setShowWelcome(false)}
+          showToast={showToast}
+        />
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </>
+    );
+  }
   return (
     <>
       <MainScreen />

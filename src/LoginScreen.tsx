@@ -1,17 +1,15 @@
 import { useState } from "react";
-import { auth, db } from "./firebase";
+import { auth } from "./firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification,
   signOut,
 } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import type { User } from "./models/User";
 
 interface LoginScreenProps {
   onLogin: (bool: boolean) => void;
-  onRequireVerify: () => void; // 👈 điều hướng sang màn hình VerifyEmail
+  onRequireVerify: () => void;
   showToast: (message: string, type: "success" | "error") => void;
 }
 
@@ -22,31 +20,22 @@ function LoginScreen({
 }: LoginScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [isRegister, setIsRegister] = useState(false);
 
   // UC-01: Đăng ký
   const register = async () => {
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = res.user.uid;
-
-      // Lưu user
-      const user: User = { uid, name, email };
-      await setDoc(doc(db, "users", uid), user);
-
-      // Gửi email xác thực
       await sendEmailVerification(res.user);
 
       showToast(
         "Đăng ký thành công! Vui lòng kiểm tra email để xác thực.",
         "success"
       );
-
-      // Đăng xuất
       await signOut(auth);
-      onLogin(false); // quay về login
-      setIsRegister(false); // chuyển về tab login
+
+      onLogin(false);
+      setIsRegister(false);
     } catch (err: any) {
       showToast("Lỗi đăng ký: " + err.message, "error");
     }
@@ -62,13 +51,14 @@ function LoginScreen({
         onRequireVerify();
         return;
       }
-
       showToast("Đăng nhập thành công!", "success");
       onLogin(true);
     } catch (err: any) {
       showToast("Lỗi đăng nhập: " + err.message, "error");
     }
   };
+
+  // Lưu hồ sơ lần đầu
 
   return (
     <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
@@ -79,18 +69,6 @@ function LoginScreen({
         <h3 className="text-center text-primary mb-4 fw-bold">
           {isRegister ? "Đăng ký tài khoản" : "Đăng nhập"}
         </h3>
-
-        {isRegister && (
-          <div className="mb-3">
-            <label className="form-label fw-semibold">Tên hiển thị</label>
-            <input
-              className="form-control"
-              placeholder="Tên"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-        )}
 
         <div className="mb-3">
           <label className="form-label fw-semibold">Email</label>

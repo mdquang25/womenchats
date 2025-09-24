@@ -260,12 +260,13 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
         {messages.map((m) => (
           <div
             key={m.id}
-            className={`d-flex mb-2 ${
+            className={`d-flex flex-column mb-2 ${
               m.senderId === currentUid
-                ? "justify-content-end"
-                : "justify-content-start"
+                ? "align-items-end"
+                : "align-items-start"
             }`}
           >
+            {/* Nội dung tin nhắn */}
             <div
               className={`p-2 rounded-3 shadow ${
                 m.senderId === currentUid
@@ -275,20 +276,23 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
               style={{ maxWidth: "70%" }}
             >
               <div style={{ whiteSpace: "pre-wrap" }}>{m.text}</div>
-              <small
-                className="text-muted d-block"
-                style={{ fontSize: "0.75rem" }}
-              >
-                {m.timestamp
-                  ? m.timestamp.toDate().toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : ""}
-              </small>
             </div>
+
+            {/* Timestamp bên ngoài */}
+            <small
+              className="text-muted mt-1 mx-1"
+              style={{ fontSize: "0.75rem" }}
+            >
+              {m.timestamp
+                ? m.timestamp.toDate().toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : ""}
+            </small>
           </div>
         ))}
+
         <div ref={chatEndRef} />
       </div>
 
@@ -298,7 +302,7 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
           <input
             type="text"
             className="form-control rounded-pill me-2"
-            placeholder="Type a message..."
+            placeholder="Nhập tin nhắn..."
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}

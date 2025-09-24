@@ -2,15 +2,37 @@ import { useState } from "react";
 import Sidebar from "./Sidebar/Sidebar";
 import ChatBox from "./ChatBox";
 import type { User } from "./models/User";
+import { useEffect } from "react";
+import { auth, db } from "./firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 function MainScreen() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userData, setUserData] = useState<User | null>(null);
+  const currentUid = auth.currentUser?.uid;
+
+  // 🔹 Load user info từ Firestore (users/{uid})
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!currentUid) return;
+      const userDoc = await getDoc(doc(db, "users", currentUid));
+      if (userDoc.exists()) {
+        setUserData({
+          uid: userDoc.id,
+          ...(userDoc.data() as Omit<User, "uid">),
+        });
+      }
+    };
+    fetchUser();
+  }, [currentUid]);
 
   return (
     <div className="d-flex" style={{ height: "100vh" }}>
       {/* Sidebar */}
       <Sidebar
+        userData={userData}
+        setUserData={setUserData}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onSelectUser={(user) => {
