@@ -102,11 +102,16 @@ function FriendList() {
               className="p-2 border-bottom d-flex align-items-center hover-bg"
               style={{ cursor: "pointer" }}
             >
-              <div
-                className="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center me-2"
-                style={{ width: "36px", height: "36px" }}
-              >
-                {user.name?.charAt(0).toUpperCase()}
+              <div className="me-1">
+                <img
+                  src={
+                    user?.avatarUrl ||
+                    "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg"
+                  }
+                  alt="Avatar"
+                  className="img-fluid rounded-circle"
+                  style={{ width: 36, height: 36, objectFit: "cover" }}
+                />
               </div>
               <div>
                 <div className="fw-bold">{user.name || user.email}</div>

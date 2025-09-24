@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { signOut, updatePassword } from "firebase/auth";
 import { auth, db } from "../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import type { User } from "../models/User";
 import Loading from "../utils/Loading";
 
@@ -57,6 +57,17 @@ function AccountSettings({ userData, setUserData }: AccountSettingsProps) {
 
       {userData ? (
         <div className="mt-3">
+          <div>
+            <img
+              src={
+                userData?.avatarUrl ||
+                "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg"
+              }
+              alt="Ảnh đại diện"
+              className="img-fluid rounded-circle mx-auto d-block mb-3"
+              style={{ width: 100, height: 100, objectFit: "cover" }}
+            />
+          </div>
           <p>
             <b>Tên:</b> {userData.name || "Chưa có tên"}
           </p>

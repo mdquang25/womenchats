@@ -142,11 +142,16 @@ function ChatList({ onSelectUser }: ChatListProps) {
               style={{ cursor: "pointer" }}
               onClick={() => onSelectUser(user)}
             >
-              <div
-                className="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center me-2"
-                style={{ width: "36px", height: "36px" }}
-              >
-                {user.name?.charAt(0).toUpperCase()}
+              <div className="me-1">
+                <img
+                  src={
+                    user?.avatarUrl ||
+                    "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg"
+                  }
+                  alt="Avatar"
+                  className="img-fluid rounded-circle"
+                  style={{ width: 36, height: 36, objectFit: "cover" }}
+                />
               </div>
               <div>
                 <div className="fw-bold">{user.name || user.email}</div>
