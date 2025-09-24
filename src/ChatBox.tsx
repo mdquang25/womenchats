@@ -206,9 +206,8 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
     if (!text.trim()) return;
 
     await addDoc(collection(db, "chats", chatId, "messages"), {
-      text,
+      text: text.trim(),
       senderId: currentUid,
-      email: auth.currentUser?.email,
       deleted: false,
       timestamp: serverTimestamp(),
     });
@@ -218,7 +217,7 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
       doc(db, "chats", chatId),
       {
         participants: [currentUid, friendUid].sort(),
-        lastMessage: text,
+        lastMessage: text.trim(),
         updatedAt: serverTimestamp(),
       },
       { merge: true }
