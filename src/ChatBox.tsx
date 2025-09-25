@@ -267,6 +267,26 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
         className="flex-grow-1 p-3 overflow-auto bg-primary bg-opacity-10"
         style={{ minHeight: 0 }}
       >
+        <div className="mt-3 text-center">
+          <div>
+            <img
+              src={
+                selectedUser.avatarUrl ||
+                "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg"
+              }
+              alt="Ảnh đại diện"
+              className="img-fluid rounded-circle mx-auto d-block mb-2"
+              style={{ width: 100, height: 100, objectFit: "cover" }}
+            />
+          </div>
+
+          <div className="mt-2 fs-5 fw-bold">
+            {selectedUser.name || "Chưa có tên"}
+          </div>
+          <div className="mb-4">
+            <em>{selectedUser.email}</em>
+          </div>
+        </div>
         {loadingMore && <Loading />}
         {messages.map((m) => (
           <div
