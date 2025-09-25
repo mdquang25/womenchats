@@ -158,12 +158,12 @@ function FriendRequests() {
               className="card mt-2 shadow list-group-item d-flex flex-column"
             >
               <div>
-                <div>{f.user.name}</div>
-                <div className="text-muted" style={{ fontSize: 12 }}>
+                <div className="fw-bold mb-1">{f.user.name}</div>
+                {/* <div className="text-muted" style={{ fontSize: 12 }}>
                   {f.user.email.length > 30
                     ? f.user.email.slice(0, 30) + "..."
                     : f.user.email}
-                </div>
+                </div> */}
               </div>
               <button
                 className="btn btn-sm btn-danger"

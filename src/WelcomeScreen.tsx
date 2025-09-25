@@ -50,7 +50,7 @@ function WelcomeScreen({ onLogin, showToast }: WelcomeScreenProps) {
     <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
       <div className="text-center">
         <h1 className="mb-4">Chào mừng đến với WomenChats!</h1>
-        <p className="lead">Nơi kết nối và chia sẻ giữa những người phụ nữ.</p>
+        <p className="lead">Nơi kết nối và chia sẻ giữa chúng ta!</p>
         <div>
           <button className="btn btn-success" onClick={() => onLogin(true)}>
             Bắt đầu trải nghiệm!
@@ -72,7 +72,7 @@ function WelcomeScreen({ onLogin, showToast }: WelcomeScreenProps) {
                     className="form-control"
                     placeholder="Tên của bạn"
                     value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value.trim())}
+                    onChange={(e) => setDisplayName(e.target.value)}
                   />
                 </div>
 

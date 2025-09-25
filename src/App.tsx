@@ -36,7 +36,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showVerifyScreen, setShowVerifyScreen] = useState(false);
-  const [showWelcome, setShowWelcome] = useState<boolean | null>(false);
+  const [showWelcome, setShowWelcome] = useState<boolean | null>(true);
 
   const [toast, setToast] = useState<{
     message: string;

@@ -20,10 +20,19 @@ function LoginScreen({
 }: LoginScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isRegister, setIsRegister] = useState(false);
-
+  // const [checked, setChecked] = useState(false);
+  // const [err1, setErr1] = useState(null);
+  // const [err2, setErr2] = useState(null);
+  // const [err3, setErr3] = useState(null);
   // UC-01: Đăng ký
   const register = async () => {
+    // setChecked(true);
+    if (password !== confirmPassword) {
+      showToast("Mật khẩu không khớp!", "error");
+      return;
+    }
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
       await sendEmailVerification(res.user);
@@ -37,7 +46,19 @@ function LoginScreen({
       onLogin(false);
       setIsRegister(false);
     } catch (err: any) {
-      showToast("Lỗi đăng ký: " + err.message, "error");
+      const errorMessage =
+        err.code === "auth/password-does-not-meet-requirements"
+          ? "Mật khẩu không đủ mạnh!"
+          : err.code === "auth/email-already-in-use"
+          ? "Email đã được sử dụng!"
+          : err.code === "auth/invalid-email"
+          ? "Email không hợp lệ!"
+          : err.code === "auth/missing-password"
+          ? "Vui lòng nhập mật khẩu!"
+          : err.code === "auth/missing-email"
+          ? "Vui lòng nhập email!"
+          : "Lỗi đăng ký: " + err.message;
+      showToast(errorMessage, "error");
     }
   };
 
@@ -54,7 +75,8 @@ function LoginScreen({
       showToast("Đăng nhập thành công!", "success");
       onLogin(true);
     } catch (err: any) {
-      showToast("Lỗi đăng nhập: " + err.message, "error");
+      console.log(err.message);
+      showToast("Lỗi đăng nhập: tài khoản hoặc mật khẩu không đúng!", "error");
     }
   };
 
@@ -84,12 +106,26 @@ function LoginScreen({
           <input
             className="form-control"
             type="password"
-            placeholder="Password"
+            placeholder="Nhập mật khẩu"
             value={password}
-            onChange={(e) => setPassword(e.target.value.trim())}
+            onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-
+        {isRegister && (
+          <div className="mb-3">
+            <label className="form-label fw-semibold">Xác nhận mật khẩu</label>
+            <input
+              className={
+                `form-control` +
+                (password !== confirmPassword ? " is-invalid" : " is-valid")
+              }
+              type="password"
+              placeholder="Xác nhận mật khẩu"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
+        )}
         <button
           className="btn btn-primary w-100 mb-3 fw-semibold"
           onClick={isRegister ? register : login}

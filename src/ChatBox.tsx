@@ -240,7 +240,19 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
       <div className="d-flex justify-content-between align-items-center border-bottom p-2">
         <h5 className="mb-0 text-primary">
           <span className="me-2">
-            <img src="chat_4_64.ico" alt={selectedUser.name} width={32} />
+            <img
+              className="rounded-circle"
+              style={{
+                width: 42,
+                height: 42,
+                objectFit: "cover",
+              }}
+              src={
+                selectedUser.avatarUrl ||
+                "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg"
+              }
+              alt="Ảnh đại diện người dùng"
+            />
           </span>
           {selectedUser.name}
         </h5>
@@ -252,7 +264,7 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
       {/* Messages */}
       <div
         ref={chatBoxRef}
-        className="flex-grow-1 p-3 overflow-auto bg-danger bg-opacity-10"
+        className="flex-grow-1 p-3 overflow-auto bg-primary bg-opacity-10"
         style={{ minHeight: 0 }}
       >
         {loadingMore && <Loading />}
