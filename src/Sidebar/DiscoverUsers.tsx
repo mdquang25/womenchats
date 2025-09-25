@@ -79,39 +79,33 @@ function DiscoverUsers() {
     const fetchSearch = async () => {
       if (!currentUid || !search.trim()) return;
       setLoading(true);
+      setSearch(search.trim());
 
-      // Search by name (prefix match)
-      const nameQuery = query(
-        collection(db, "users"),
-        orderBy("name"),
-        startAt(search),
-        endAt(search + "\uf8ff"),
-        limit(SEARCH_LIMIT)
-      );
-      const nameSnap = await getDocs(nameQuery);
-      let users: User[] = nameSnap.docs
-        .map((doc) => ({ uid: doc.id, ...(doc.data() as Omit<User, "uid">) }))
-        .filter((u) => u.uid !== currentUid && !relatedUids.has(u.uid));
-
-      // If not enough, search by email as well
-      if (users.length < SEARCH_LIMIT) {
+      let users: User[];
+      if (search.includes("@")) {
+        // Exact match email
         const emailQuery = query(
           collection(db, "users"),
-          orderBy("email"),
+          where("email", "==", search),
+          limit(1)
+        );
+        const emailSnap = await getDocs(emailQuery);
+        users = emailSnap.docs
+          .map((doc) => ({ uid: doc.id, ...(doc.data() as Omit<User, "uid">) }))
+          .filter((u) => u.uid !== currentUid && !relatedUids.has(u.uid));
+      } else {
+        // Prefix match name
+        const nameQuery = query(
+          collection(db, "users"),
+          orderBy("name"),
           startAt(search),
           endAt(search + "\uf8ff"),
           limit(SEARCH_LIMIT)
         );
-        const emailSnap = await getDocs(emailQuery);
-        const emailUsers: User[] = emailSnap.docs
+        const nameSnap = await getDocs(nameQuery);
+        users = nameSnap.docs
           .map((doc) => ({ uid: doc.id, ...(doc.data() as Omit<User, "uid">) }))
-          .filter(
-            (u) =>
-              u.uid !== currentUid &&
-              !relatedUids.has(u.uid) &&
-              !users.some((uu) => uu.uid === u.uid)
-          );
-        users = [...users, ...emailUsers].slice(0, SEARCH_LIMIT);
+          .filter((u) => u.uid !== currentUid && !relatedUids.has(u.uid));
       }
 
       setSuggested(users);
@@ -158,24 +152,37 @@ function DiscoverUsers() {
               className="card mt-2 shadow list-group-item d-flex flex-column"
             >
               <div>
-                <div>{user.name}</div>
-                <div className="text-muted" style={{ fontSize: 12 }}>
+                {/* <div className="text-muted" style={{ fontSize: 12 }}>
                   {user.email.length > 30
                     ? user.email.slice(0, 30) + "..."
                     : user.email}
-                </div>
+                </div> */}
               </div>
-              <button
-                className="btn btn-sm btn-primary"
-                disabled={sending === user.uid || sent.includes(user.uid)}
-                onClick={() => handleSendRequest(user)}
-              >
-                {sent.includes(user.uid)
-                  ? "Request Sent"
-                  : sending === user.uid
-                  ? "Sending..."
-                  : "Add Friend"}
-              </button>
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <div className="me-1">
+                  <img
+                    src={
+                      user?.avatarUrl ||
+                      "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg"
+                    }
+                    alt="Avatar"
+                    className="img-fluid rounded-circle"
+                    style={{ width: 36, height: 36, objectFit: "cover" }}
+                  />
+                </div>
+                <button
+                  className="btn btn-sm btn-primary"
+                  disabled={sending === user.uid || sent.includes(user.uid)}
+                  onClick={() => handleSendRequest(user)}
+                >
+                  {sent.includes(user.uid)
+                    ? "Request Sent"
+                    : sending === user.uid
+                    ? "Sending..."
+                    : "Add Friend"}
+                </button>
+              </div>
+              <div className="fw-bold">{user.name}</div>
             </li>
           ))}
         </ul>

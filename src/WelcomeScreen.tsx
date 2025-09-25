@@ -1,6 +1,6 @@
 import { doc, setDoc } from "firebase/firestore";
-// import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-// import { storage } from "./firebase";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "./firebase";
 import type { User } from "./models/User";
 import { useState } from "react";
 import { auth, db } from "./firebase";
@@ -13,7 +13,7 @@ interface WelcomeScreenProps {
 function WelcomeScreen({ onLogin, showToast }: WelcomeScreenProps) {
   const [displayName, setDisplayName] = useState("");
   const [showModal, setShowModal] = useState(true);
-  // const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const saveProfile = async () => {
     try {
@@ -24,11 +24,11 @@ function WelcomeScreen({ onLogin, showToast }: WelcomeScreenProps) {
       let avatarUrl =
         "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg";
 
-      // if (avatarFile) {
-      //   const avatarRef = ref(storage, `avatars/${uid}`);
-      //   await uploadBytes(avatarRef, avatarFile);
-      //   avatarUrl = await getDownloadURL(avatarRef);
-      // }
+      if (avatarFile) {
+        const avatarRef = ref(storage, `avatars/${uid}`);
+        await uploadBytes(avatarRef, avatarFile);
+        avatarUrl = await getDownloadURL(avatarRef);
+      }
 
       const userData: User = {
         uid,
@@ -72,19 +72,19 @@ function WelcomeScreen({ onLogin, showToast }: WelcomeScreenProps) {
                     className="form-control"
                     placeholder="Tên của bạn"
                     value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
+                    onChange={(e) => setDisplayName(e.target.value.trim())}
                   />
                 </div>
 
-                {/* <div className="mb-3">
-                <label className="form-label fw-semibold">Ảnh đại diện</label>
-                <input
-                  className="form-control"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
-                />
-              </div> */}
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Ảnh đại diện</label>
+                  <input
+                    className="form-control"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                  />
+                </div>
 
                 <div className="d-flex justify-content-end">
                   <button

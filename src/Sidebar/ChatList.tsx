@@ -20,6 +20,7 @@ function ChatList({ onSelectUser }: ChatListProps) {
   const [friends, setFriends] = useState<FriendWithPreview[]>([]);
   const [filtered, setFiltered] = useState<FriendWithPreview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedUid, setSelectedUid] = useState<string | null>(null); // 👈 thêm
 
   const currentUid = auth.currentUser?.uid;
 
@@ -138,9 +139,16 @@ function ChatList({ onSelectUser }: ChatListProps) {
           filtered.map((user) => (
             <div
               key={user.uid}
-              className="p-2 border-bottom d-flex align-items-center hover-bg"
-              style={{ cursor: "pointer" }}
-              onClick={() => onSelectUser(user)}
+              className={`p-2 border-bottom d-flex align-items-center`}
+              style={{
+                cursor: "pointer",
+                backgroundColor:
+                  selectedUid === user.uid ? "#e7f1ff" : "transparent", // 👈 hiệu ứng chọn
+              }}
+              onClick={() => {
+                setSelectedUid(user.uid); // cập nhật state chọn
+                onSelectUser(user);
+              }}
             >
               <div className="me-1">
                 <img
@@ -168,5 +176,4 @@ function ChatList({ onSelectUser }: ChatListProps) {
     </div>
   );
 }
-
 export default ChatList;

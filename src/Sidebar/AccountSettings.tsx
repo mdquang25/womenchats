@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { signOut, updatePassword } from "firebase/auth";
-import { auth, db } from "../firebase";
+import { auth, db, storage } from "../firebase";
 import { doc, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import type { User } from "../models/User";
 import Loading from "../utils/Loading";
 
@@ -19,6 +20,7 @@ function AccountSettings({ userData, setUserData }: AccountSettingsProps) {
   const [newName, setNewName] = useState("");
 
   const currentUid = auth.currentUser?.uid;
+
   // 🔹 Đăng xuất
   const confirmLogout = () => {
     signOut(auth);
@@ -51,12 +53,31 @@ function AccountSettings({ userData, setUserData }: AccountSettingsProps) {
     }
   };
 
+  // 🔹 Upload Avatar
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.[0] || !currentUid) return;
+    const file = e.target.files[0];
+
+    try {
+      const avatarRef = ref(storage, `avatars/${currentUid}`);
+      await uploadBytes(avatarRef, file);
+      const url = await getDownloadURL(avatarRef);
+
+      await updateDoc(doc(db, "users", currentUid), { avatarUrl: url });
+      setUserData((prev) => (prev ? { ...prev, avatarUrl: url } : prev));
+
+      alert("Avatar updated successfully!");
+    } catch (err: any) {
+      alert("Error uploading avatar: " + err.message);
+    }
+  };
+
   return (
     <div className="flex-1 d-flex h-100 p-3 flex-column border-end bg-white">
       <div className="fw-bold fs-6 p-2 border-bottom">Cài đặt tài khoản</div>
 
       {userData ? (
-        <div className="mt-3">
+        <div className="mt-3 text-center">
           <div>
             <img
               src={
@@ -64,11 +85,26 @@ function AccountSettings({ userData, setUserData }: AccountSettingsProps) {
                 "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg"
               }
               alt="Ảnh đại diện"
-              className="img-fluid rounded-circle mx-auto d-block mb-3"
+              className="img-fluid rounded-circle mx-auto d-block mb-2"
               style={{ width: 100, height: 100, objectFit: "cover" }}
             />
+            {/* Nút sửa avatar */}
+            <label
+              htmlFor="avatarInput"
+              className="btn btn-sm btn-outline-success"
+            >
+              <i className="bi bi-pen" /> Sửa avatar
+            </label>
+            <input
+              type="file"
+              id="avatarInput"
+              accept="image/*"
+              className="d-none"
+              onChange={handleAvatarChange}
+            />
           </div>
-          <p>
+
+          <p className="mt-3">
             <b>Tên:</b> {userData.name || "Chưa có tên"}
           </p>
           <p>
@@ -79,22 +115,26 @@ function AccountSettings({ userData, setUserData }: AccountSettingsProps) {
         <Loading />
       )}
 
+      {/* Các nút chức năng cũ */}
       <button
         className="btn btn-outline-primary mb-2"
         onClick={() => setShowEditModal(true)}
       >
-        Chỉnh sửa hồ sơ
+        <i className="bi bi-pen me-1" />
+        Đổi tên hiển thị
       </button>
       <button
         className="btn btn-outline-warning mb-2"
         onClick={() => setShowPasswordModal(true)}
       >
+        <i className="bi bi-lock me-1" />
         Đổi mật khẩu
       </button>
       <button
         className="btn btn-outline-danger mb-2"
         onClick={() => setShowLogoutModal(true)}
       >
+        <i className="bi bi-box-arrow-right me-1" />
         Đăng xuất
       </button>
 
@@ -186,7 +226,7 @@ function AccountSettings({ userData, setUserData }: AccountSettingsProps) {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Chỉnh sửa hồ sơ</h5>
+                <h5 className="modal-title">Đổi tên hiển thị</h5>
                 <button
                   type="button"
                   className="btn-close"

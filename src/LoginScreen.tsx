@@ -58,8 +58,6 @@ function LoginScreen({
     }
   };
 
-  // Lưu hồ sơ lần đầu
-
   return (
     <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
       <div
@@ -77,7 +75,7 @@ function LoginScreen({
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value.trim())}
           />
         </div>
 
@@ -88,7 +86,7 @@ function LoginScreen({
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value.trim())}
           />
         </div>
 

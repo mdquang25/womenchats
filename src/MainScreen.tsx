@@ -62,7 +62,9 @@ function MainScreen() {
 
             {/* Messages */}
             <div className="flex-grow-1 p-3 overflow-auto align-items-center d-flex justify-content-center">
-              <div className="text-muted">Select a user to start chatting</div>
+              <div className="text-muted">
+                Chọn một cuộc trò chuyện để bắt đầu
+              </div>
             </div>
           </div>
         )}
