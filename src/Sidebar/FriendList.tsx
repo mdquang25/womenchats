@@ -110,7 +110,7 @@ function FriendList() {
                   }
                   alt="Avatar"
                   className="img-fluid rounded-circle"
-                  style={{ width: 36, height: 36, objectFit: "cover" }}
+                  style={{ minWidth: 36, height: 36, objectFit: "cover" }}
                 />
               </div>
               <div>

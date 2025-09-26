@@ -158,19 +158,32 @@ function FriendRequests() {
               className="card mt-2 shadow list-group-item d-flex flex-column"
             >
               <div>
-                <div className="fw-bold mb-1">{f.user.name}</div>
                 {/* <div className="text-muted" style={{ fontSize: 12 }}>
-                  {f.user.email.length > 30
-                    ? f.user.email.slice(0, 30) + "..."
-                    : f.user.email}
+                  {user.email.length > 30
+                    ? user.email.slice(0, 30) + "..."
+                    : user.email}
                 </div> */}
               </div>
-              <button
-                className="btn btn-sm btn-danger"
-                onClick={() => handleCancel(f.id)}
-              >
-                Thu hồi lời mời
-              </button>
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <div className="me-1">
+                  <img
+                    src={
+                      f.user.avatarUrl ||
+                      "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg"
+                    }
+                    alt="Avatar"
+                    className="img-fluid rounded-circle"
+                    style={{ width: 36, height: 36, objectFit: "cover" }}
+                  />
+                </div>
+                <button
+                  className="btn btn-sm btn-secondary"
+                  onClick={() => handleCancel(f.id)}
+                >
+                  Thu hồi lời mời
+                </button>
+              </div>
+              <div className="fw-bold">{f.user.name}</div>
             </li>
           ))}
         </ul>

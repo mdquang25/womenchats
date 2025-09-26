@@ -162,12 +162,17 @@ function Sidebar({
                 key < 5 && (
                   <button
                     key={item.key}
-                    className={`btn btn-link py-3 rounded-4 mx-1 my-2 ${
+                    className={`btn btn-link p-2 rounded-3 mx-auto my-1 ${
                       selected === item.key
                         ? "bg-secondary text-warning"
                         : "text-white"
                     }`}
-                    style={{ border: "none", paddingTop: 0, paddingBottom: 0 }}
+                    style={{
+                      border: "none",
+
+                      paddingTop: 0,
+                      paddingBottom: 0,
+                    }}
                     onClick={() => setSelected(item.key as NavOption)}
                     title={item.label}
                   >
