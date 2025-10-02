@@ -4,7 +4,14 @@ import { sendEmailVerification } from "firebase/auth";
 
 function VerifyEmailScreen({ onBackToLogin, showToast }: any) {
   const [cooldown, setCooldown] = useState(60);
+  const userEmail = auth.currentUser?.email;
 
+  const getSecretEmail = () => {
+    if (!userEmail) return "";
+    const [name, domain] = userEmail.split("@");
+    if (name.length <= 5) return "*****@" + domain;
+    return `${name.slice(0, 5)}*****@${domain}`;
+  };
   useEffect(() => {
     if (cooldown > 0) {
       const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
@@ -41,7 +48,7 @@ function VerifyEmailScreen({ onBackToLogin, showToast }: any) {
         style={{ maxWidth: "420px" }}
       >
         <h4 className="text-primary fw-bold mb-3">Xác thực email</h4>
-        <p>Chúng tôi đã gửi email xác thực đến địa chỉ của bạn.</p>
+        <p>Chúng tôi đã gửi email xác thực đến địa chỉ {getSecretEmail()}</p>
 
         <button
           className="btn btn-secondary w-100 mb-3"
