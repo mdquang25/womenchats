@@ -22,11 +22,22 @@ function LoginScreen({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isRegister, setIsRegister] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   // const [checked, setChecked] = useState(false);
   // const [err1, setErr1] = useState(null);
   // const [err2, setErr2] = useState(null);
   // const [err3, setErr3] = useState(null);
   // UC-01: Đăng ký
+
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleShowConfirmPassword = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
   const register = async () => {
     // setChecked(true);
     if (password !== confirmPassword) {
@@ -81,7 +92,19 @@ function LoginScreen({
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
+    <div className="d-flex align-items-center justify-content-around flex-sm-row flex-column vh-100 bg-light">
+      <div className="text-center">
+        <img
+          src="logo_womenchats.png"
+          alt="WomenChats Logo"
+          className="img-fluid mb-4"
+          style={{ maxWidth: "150px" }}
+        />
+        <div className="mb-4">
+          <h1 className="display-5 fw-bold">WomenChats</h1>
+          <p className="text-muted">Kết nối và trò chuyện cùng bạn bè!</p>
+        </div>
+      </div>
       <div
         className="card shadow-lg p-4"
         style={{ width: "100%", maxWidth: "420px" }}
@@ -93,7 +116,7 @@ function LoginScreen({
         <div className="mb-3">
           <label className="form-label fw-semibold">Email</label>
           <input
-            className="form-control"
+            className="form-control border-0 shadow-sm"
             type="email"
             placeholder="Email"
             value={email}
@@ -103,27 +126,47 @@ function LoginScreen({
 
         <div className="mb-3">
           <label className="form-label fw-semibold">Mật khẩu</label>
-          <input
-            className="form-control"
-            type="password"
-            placeholder="Nhập mật khẩu"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="input-group border-0 shadow-sm">
+            <input
+              className="form-control border-0"
+              type={showPassword ? "text" : "password"}
+              placeholder="Nhập mật khẩu"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button className="btn" type="button" onClick={toggleShowPassword}>
+              <i
+                className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}
+              ></i>
+            </button>
+          </div>
         </div>
         {isRegister && (
           <div className="mb-3">
             <label className="form-label fw-semibold">Xác nhận mật khẩu</label>
-            <input
-              className={
-                `form-control` +
-                (password !== confirmPassword ? " is-invalid" : " is-valid")
-              }
-              type="password"
-              placeholder="Xác nhận mật khẩu"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
+            <div className="input-group border-0 shadow-sm">
+              <input
+                className={
+                  `form-control` +
+                  (password !== confirmPassword ? " is-invalid" : " is-valid")
+                }
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Xác nhận mật khẩu"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              <button
+                className="btn"
+                type="button"
+                onClick={toggleShowConfirmPassword}
+              >
+                <i
+                  className={`bi ${
+                    showConfirmPassword ? "bi-eye-slash" : "bi-eye"
+                  }`}
+                ></i>
+              </button>
+            </div>
           </div>
         )}
         <button

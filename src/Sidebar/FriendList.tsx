@@ -115,10 +115,8 @@ function FriendList() {
               </div>
               <div>
                 <div className="fw-bold">{user.name || user.email}</div>
-                <small className="text-muted">
-                  {user.email.length > 22
-                    ? user.email.slice(0, 22) + "..."
-                    : user.email}
+                <small className="text-muted" title={user.email}>
+                  {user.email}
                 </small>
               </div>
             </div>

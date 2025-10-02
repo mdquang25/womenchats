@@ -25,14 +25,14 @@ type NavOption =
   | "accountSettings";
 
 const navItems = [
-  { key: "chats", label: "Chats", icon: "bi-chat-dots" },
-  { key: "friends", label: "Friends", icon: "bi-person-check" },
-  { key: "friendRequests", label: "Friend Requests", icon: "bi-person-plus" },
-  { key: "discover", label: "Discover Users", icon: "bi-search" },
-  { key: "appSettings", label: "App Settings", icon: "bi-gear" },
+  { key: "chats", label: "Danh sách cuộc trò chuyện", icon: "bi-chat-dots" },
+  { key: "friends", label: "Danh sách bạn bè", icon: "bi-person-check" },
+  { key: "friendRequests", label: "Lời mời kết bạn", icon: "bi-person-plus" },
+  { key: "discover", label: "Tìm kiếm bạn mới", icon: "bi-search" },
+  { key: "appSettings", label: "Cài đặt ứng dụng", icon: "bi-gear" },
   {
     key: "accountSettings",
-    label: "Account Settings",
+    label: "Cài đặt tài khoản",
     icon: "bi-person-circle",
   },
 ];

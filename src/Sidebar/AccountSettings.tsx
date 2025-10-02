@@ -85,6 +85,7 @@ function AccountSettings({ userData, setUserData }: AccountSettingsProps) {
                 "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg"
               }
               alt="Ảnh đại diện"
+              title="ảnh đại diện người dùng"
               className="img-fluid rounded-circle mx-auto d-block mb-2"
               style={{ width: 100, height: 100, objectFit: "cover" }}
             />
@@ -107,7 +108,7 @@ function AccountSettings({ userData, setUserData }: AccountSettingsProps) {
           <p className="mt-3">
             <b>Tên:</b> {userData.name || "Chưa có tên"}
           </p>
-          <p>
+          <p title={userData.email}>
             <b>Email:</b> {userData.email}
           </p>
         </div>
