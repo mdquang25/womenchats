@@ -59,7 +59,7 @@ function AccountSettings({ userData, setUserData }: AccountSettingsProps) {
     const file = e.target.files[0];
 
     try {
-      const avatarRef = ref(storage, `avatars/${currentUid}`);
+      const avatarRef = ref(storage, `avatars/${currentUid}/${file.name}`);
       await uploadBytes(avatarRef, file);
       const url = await getDownloadURL(avatarRef);
 

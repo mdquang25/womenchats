@@ -328,7 +328,11 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
       </div>
 
       {/* Input */}
-      <div className="p-3">
+      <div className="p-3 d-flex">
+        <button className="btn btn-light me-2">
+          <i className="bi bi-image"></i>
+        </button>
+
         <div className="input-group">
           <input
             type="text"

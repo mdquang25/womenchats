@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { db, auth } from "../firebase";
 import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import Loading from "../utils/Loading";
@@ -8,6 +8,7 @@ import type { Chat } from "../models/Chat";
 
 interface ChatListProps {
   onSelectUser: (user: User) => void;
+  show?: boolean;
 }
 
 interface FriendWithPreview extends User {
@@ -15,88 +16,89 @@ interface FriendWithPreview extends User {
   lastMsgText: string;
 }
 
-function ChatList({ onSelectUser }: ChatListProps) {
+function ChatList({ onSelectUser, show }: ChatListProps) {
   const [search, setSearch] = useState("");
   const [friends, setFriends] = useState<FriendWithPreview[]>([]);
   const [filtered, setFiltered] = useState<FriendWithPreview[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedUid, setSelectedUid] = useState<string | null>(null); // 👈 thêm
+  const [selectedUid, setSelectedUid] = useState<string | null>(null);
 
   const currentUid = auth.currentUser?.uid;
 
-  useEffect(() => {
-    const fetchFriends = async () => {
-      if (!currentUid) return;
-      setLoading(true);
+  // fetchFriends extracted so it can be called by button
+  const fetchFriends = useCallback(async () => {
+    if (!currentUid) return;
+    setLoading(true);
 
-      // 1. Get all accepted friendships
-      const friendshipQuery = query(
-        collection(db, "friendships"),
-        where("participants", "array-contains", currentUid),
-        where("status", "==", "accepted")
-      );
-      const friendshipSnap = await getDocs(friendshipQuery);
-      const friendships: Friendship[] = friendshipSnap.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<Friendship, "id">),
-      }));
+    // 1. Get all accepted friendships
+    const friendshipQuery = query(
+      collection(db, "friendships"),
+      where("participants", "array-contains", currentUid),
+      where("status", "==", "accepted")
+    );
+    const friendshipSnap = await getDocs(friendshipQuery);
+    const friendships: Friendship[] = friendshipSnap.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Omit<Friendship, "id">),
+    }));
 
-      // 2. Get friend UIDs
-      const friendUids = friendships
-        .map((f) => f.participants.find((uid) => uid !== currentUid))
-        .filter(Boolean) as string[];
+    // 2. Get friend UIDs
+    const friendUids = friendships
+      .map((f) => f.participants.find((uid) => uid !== currentUid))
+      .filter(Boolean) as string[];
 
-      if (friendUids.length === 0) {
-        setFriends([]);
-        setFiltered([]);
-        setLoading(false);
-        return;
-      }
-
-      // 3. Fetch friend info
-      const usersQuery = query(
-        collection(db, "users"),
-        where("__name__", "in", friendUids)
-      );
-      const usersSnap = await getDocs(usersQuery);
-      const users: User[] = usersSnap.docs.map((doc) => ({
-        uid: doc.id,
-        ...(doc.data() as Omit<User, "uid">),
-      }));
-
-      // 4. Fetch chats to get last message
-      const chatsQuery = query(
-        collection(db, "chats"),
-        where("participants", "array-contains", currentUid),
-        orderBy("updatedAt", "desc")
-      );
-      const chatsSnap = await getDocs(chatsQuery);
-      const chats: Chat[] = chatsSnap.docs.map((doc) => ({
-        cid: doc.id,
-        ...(doc.data() as Omit<Chat, "cid">),
-      }));
-
-      // 5. Merge: attach lastMessage + updatedAt to each friend
-      const friendsWithPreview: FriendWithPreview[] = users.map((user) => {
-        const chatId = [currentUid, user.uid].sort().join("_");
-        const chat = chats.find((c) => c.cid === chatId);
-        return {
-          ...user,
-          lastMsgTime: chat?.updatedAt?.toMillis?.() || 0,
-          lastMsgText: chat?.lastMessage || "No messages yet",
-        };
-      });
-
-      // 6. Sort by lastMsgTime
-      friendsWithPreview.sort((a, b) => b.lastMsgTime - a.lastMsgTime);
-
-      setFriends(friendsWithPreview);
-      setFiltered(friendsWithPreview);
+    if (friendUids.length === 0) {
+      setFriends([]);
+      setFiltered([]);
       setLoading(false);
-    };
+      return;
+    }
 
-    fetchFriends();
+    // 3. Fetch friend info
+    const usersQuery = query(
+      collection(db, "users"),
+      where("__name__", "in", friendUids)
+    );
+    const usersSnap = await getDocs(usersQuery);
+    const users: User[] = usersSnap.docs.map((doc) => ({
+      uid: doc.id,
+      ...(doc.data() as Omit<User, "uid">),
+    }));
+
+    // 4. Fetch chats to get last message
+    const chatsQuery = query(
+      collection(db, "chats"),
+      where("participants", "array-contains", currentUid),
+      orderBy("updatedAt", "desc")
+    );
+    const chatsSnap = await getDocs(chatsQuery);
+    const chats: Chat[] = chatsSnap.docs.map((doc) => ({
+      cid: doc.id,
+      ...(doc.data() as Omit<Chat, "cid">),
+    }));
+
+    // 5. Merge: attach lastMessage + updatedAt to each friend
+    const friendsWithPreview: FriendWithPreview[] = users.map((user) => {
+      const chatId = [currentUid, user.uid].sort().join("_");
+      const chat = chats.find((c) => c.cid === chatId);
+      return {
+        ...user,
+        lastMsgTime: chat?.updatedAt?.toMillis?.() || 0,
+        lastMsgText: chat?.lastMessage || "Chưa có tin nhắn",
+      };
+    });
+
+    // 6. Sort by lastMsgTime
+    friendsWithPreview.sort((a, b) => b.lastMsgTime - a.lastMsgTime);
+
+    setFriends(friendsWithPreview);
+    setFiltered(friendsWithPreview);
+    setLoading(false);
   }, [currentUid]);
+
+  useEffect(() => {
+    fetchFriends();
+  }, [fetchFriends]);
 
   // Filter by search
   useEffect(() => {
@@ -114,8 +116,29 @@ function ChatList({ onSelectUser }: ChatListProps) {
   }, [search, friends]);
 
   return (
-    <div className="flex-1 d-flex h-100 p-2 flex-column border-end bg-white">
-      <div className="fs-6 fw-bold p-2 border-bottom">Cuộc trò chuyện</div>
+    <div
+      className={`flex-1 d-flex h-100 p-2 flex-column border-end bg-white ${
+        show ? "" : "d-none"
+      }`}
+    >
+      <div className="d-flex align-items-center justify-content-between p-2 border-bottom">
+        <div className="fs-6 fw-bold">Cuộc trò chuyện</div>
+
+        {/* Reload button beside title */}
+        <div>
+          <button
+            className={`btn btn-sm ${
+              loading ? "btn-warning shadow" : "btn-outline-secondary"
+            }`}
+            onClick={fetchFriends}
+            disabled={loading}
+            title="Làm mới"
+          >
+            <i className="bi bi-arrow-clockwise me-1" />
+          </button>
+        </div>
+      </div>
+
       {/* Search */}
       <div className="p-2 border-bottom">
         <input

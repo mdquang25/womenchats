@@ -25,7 +25,7 @@ function WelcomeScreen({ onLogin, showToast }: WelcomeScreenProps) {
         "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg";
 
       if (avatarFile) {
-        const avatarRef = ref(storage, `avatars/${uid}`);
+        const avatarRef = ref(storage, `avatars/${uid}/${avatarFile.name}`);
         await uploadBytes(avatarRef, avatarFile);
         avatarUrl = await getDownloadURL(avatarRef);
       }

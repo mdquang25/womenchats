@@ -45,6 +45,7 @@ function Sidebar({
   onSelectUser,
 }: SidebarProps) {
   const [selected, setSelected] = useState<NavOption>("chats");
+  const [showChatsList, setShowChatsList] = useState(true);
 
   // wrapper để truyền xuống ChatsList: đóng sidebar trên mobile sau khi chọn
   const handleSelectUser = (user: User) => {
@@ -92,7 +93,11 @@ function Sidebar({
                         : "text-white"
                     }`}
                     style={{ border: "none", paddingTop: 0, paddingBottom: 0 }}
-                    onClick={() => setSelected(item.key as NavOption)}
+                    onClick={() => {
+                      setSelected(item.key as NavOption);
+                      setSelected(item.key as NavOption);
+                      setShowChatsList(item.key === "chats");
+                    }}
                     title={item.label}
                   >
                     <i className={`bi ${item.icon} fs-4`} />
@@ -112,7 +117,10 @@ function Sidebar({
                 paddingLeft: 0,
                 paddingRight: 0,
               }}
-              onClick={() => setSelected(navItems[5].key as NavOption)}
+              onClick={() => {
+                setSelected(navItems[5].key as NavOption);
+                setShowChatsList(navItems[5].key === "chats");
+              }}
               title={navItems[5].label}
             >
               <img
@@ -133,9 +141,7 @@ function Sidebar({
 
           {/* nội dung */}
           <div className="flex-grow-1" style={{ minWidth: 200 }}>
-            {selected === "chats" && (
-              <ChatsList onSelectUser={handleSelectUser} />
-            )}
+            <ChatsList onSelectUser={handleSelectUser} show={showChatsList} />
             {selected === "friends" && <FriendList />}
             {selected === "friendRequests" && <FriendRequests />}
             {selected === "discover" && <DiscoverUsers />}
@@ -173,7 +179,10 @@ function Sidebar({
                       paddingTop: 0,
                       paddingBottom: 0,
                     }}
-                    onClick={() => setSelected(item.key as NavOption)}
+                    onClick={() => {
+                      setSelected(item.key as NavOption);
+                      setShowChatsList(item.key === "chats");
+                    }}
                     title={item.label}
                   >
                     <i className={`bi ${item.icon} fs-4`} />
@@ -193,7 +202,10 @@ function Sidebar({
                 paddingLeft: 0,
                 paddingRight: 0,
               }}
-              onClick={() => setSelected(navItems[5].key as NavOption)}
+              onClick={() => {
+                setSelected(navItems[5].key as NavOption);
+                setShowChatsList(navItems[5].key === "chats");
+              }}
               title={navItems[5].label}
             >
               <img
@@ -213,7 +225,7 @@ function Sidebar({
           </div>
 
           <div className="flex-grow-1" style={{ minWidth: 240 }}>
-            {selected === "chats" && <ChatsList onSelectUser={onSelectUser} />}
+            <ChatsList onSelectUser={onSelectUser} show={showChatsList} />
             {selected === "friends" && <FriendList />}
             {selected === "friendRequests" && <FriendRequests />}
             {selected === "discover" && <DiscoverUsers />}
