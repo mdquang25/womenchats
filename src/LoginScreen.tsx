@@ -148,7 +148,11 @@ function LoginScreen({
               <input
                 className={
                   `form-control` +
-                  (password !== confirmPassword ? " is-invalid" : " is-valid")
+                  (password.length >= 6
+                    ? password !== confirmPassword
+                      ? " is-invalid"
+                      : " is-valid"
+                    : "")
                 }
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Xác nhận mật khẩu"

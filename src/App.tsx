@@ -7,6 +7,7 @@ import VerifyEmailScreen from "./VerifyEmailScreen";
 import MainScreen from "./MainScreen";
 import WelcomeScreen from "./WelcomeScreen";
 import "./App.css";
+import AppFCM from "./AppFCM";
 
 function Toast({ message, type, onClose }: any) {
   return (
@@ -123,6 +124,7 @@ function App() {
   return (
     <>
       <MainScreen />
+      <AppFCM />
       {toast && (
         <Toast
           message={toast.message}

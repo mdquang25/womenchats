@@ -6,5 +6,6 @@ export interface Message {
   imageUrl?: string;
   senderId: string;
   deleted: boolean;
+  edited: boolean;
   timestamp: Timestamp;
 }
