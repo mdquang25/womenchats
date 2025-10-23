@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { db, auth } from "./firebase";
 import {
   addDoc,
@@ -14,6 +14,12 @@ import {
   getDocs,
   QueryDocumentSnapshot,
 } from "firebase/firestore";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
 import type { DocumentData } from "firebase/firestore";
 import type { User } from "./models/User";
 import type { Message } from "./models/Message";
@@ -26,17 +32,93 @@ interface ChatBoxProps {
 
 const PAGE_SIZE = 30;
 
+// local message type to allow optional imageUrl
+type LocalMessage = Message & { imageUrl?: string };
+
 function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<LocalMessage[]>([]);
   const [text, setText] = useState("");
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] =
     useState<QueryDocumentSnapshot<DocumentData> | null>(null);
 
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const chatBoxRef = useRef<HTMLDivElement | null>(null);
   const initialLoadedRef = useRef(false); // để biết đã scroll lần đầu chưa
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Image viewer state
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [imageViewerIndex, setImageViewerIndex] = useState(0);
+  const [imageZoom, setImageZoom] = useState(1);
+
+  // derive images list from messages (ordered asc)
+  const images = useMemo(
+    () =>
+      messages
+        .filter((m) => m.imageUrl)
+        .map((m) => ({ id: m.id, url: m.imageUrl! })),
+    [messages]
+  );
+
+  // Image viewer helpers
+  const openImageViewer = (index: number) => {
+    if (index < 0 || index >= images.length) return;
+    setImageViewerIndex(index);
+    setImageZoom(1);
+    setImageViewerOpen(true);
+  };
+
+  const closeImageViewer = () => {
+    setImageViewerOpen(false);
+    setImageZoom(1);
+  };
+
+  const showNextImage = () =>
+    setImageViewerIndex((i) => (i < images.length - 1 ? i + 1 : i));
+  const showPrevImage = () => setImageViewerIndex((i) => (i > 0 ? i - 1 : i));
+
+  const zoomIn = () => setImageZoom((z) => Math.min(z + 0.25, 4));
+  const zoomOut = () => setImageZoom((z) => Math.max(z - 0.25, 0.25));
+  const resetZoom = () => setImageZoom(1);
+
+  // keyboard navigation for viewer
+  useEffect(() => {
+    if (!imageViewerOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeImageViewer();
+      if (e.key === "ArrowRight") showNextImage();
+      if (e.key === "ArrowLeft") showPrevImage();
+      if (e.key === "+" || e.key === "=") zoomIn();
+      if (e.key === "-") zoomOut();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [imageViewerOpen, images.length]);
+
+  const downloadImage = async (url?: string) => {
+    if (!url) return;
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      const objectUrl = URL.createObjectURL(blob);
+      a.href = objectUrl;
+      // try to infer extension
+      const ext = (url.split(".").pop() || "jpg").split(/\?|#/)[0];
+      a.download = `image_${Date.now()}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error("Download failed", err);
+    }
+  };
 
   const currentUid = auth.currentUser?.uid || "";
   const friendUid = selectedUser.uid;
@@ -52,9 +134,8 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
   };
 
   // helper: dedupe & sort asc by timestamp
-  const dedupeAndSortAsc = (arr: Message[]) => {
-    const map = new Map<string, Message>();
-    // keep last occurrence (so that newer doc overwrites older if same id appears later)
+  const dedupeAndSortAsc = (arr: LocalMessage[]) => {
+    const map = new Map<string, LocalMessage>();
     for (const m of arr) {
       map.set(m.id, m);
     }
@@ -83,9 +164,10 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
 
     const unsub = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs; // docs in desc order (newest -> oldest)
-      const pageMsgs: Message[] = docs.map((d) => ({
+      const pageMsgs: LocalMessage[] = docs.map((d) => ({
         id: d.id,
         ...(d.data() as Omit<Message, "id">),
+        ...(d.data() as { imageUrl?: string }),
       }));
 
       // reverse to asc (oldest -> newest) for display
@@ -93,7 +175,6 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
 
       setMessages((prev) => {
         // merge prev (may contain older pages) + pageAsc (latest page)
-        // We want to keep both without duplicates, then sort asc
         const merged = [...prev, ...pageAsc];
         return dedupeAndSortAsc(merged);
       });
@@ -141,7 +222,6 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
     const prevScrollHeight = ref?.scrollHeight ?? 0;
     const prevScrollTop = ref?.scrollTop ?? 0;
 
-    // query older pages: keep same orderBy desc, startAfter(lastDoc), limit
     const q = query(
       collection(db, "chats", chatId, "messages"),
       orderBy("timestamp", "desc"),
@@ -157,9 +237,10 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
       return;
     }
 
-    const pageMsgs: Message[] = docs.map((d) => ({
+    const pageMsgs: LocalMessage[] = docs.map((d) => ({
       id: d.id,
       ...(d.data() as Omit<Message, "id">),
+      ...(d.data() as { imageUrl?: string }),
     }));
 
     const pageAsc = pageMsgs.reverse(); // older -> less old -> ... (asc for prepending)
@@ -171,7 +252,6 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
       return unique;
     });
 
-    // update lastDoc to the oldest doc in this newly fetched page (docs[docs.length-1])
     setLastDoc(docs[docs.length - 1] ?? null);
     setHasMore(docs.length === PAGE_SIZE);
     setLoadingMore(false);
@@ -180,7 +260,6 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
     requestAnimationFrame(() => {
       const newHeight = ref?.scrollHeight ?? 0;
       if (ref) {
-        // increase scrollTop by deltaHeight to keep view anchored
         ref.scrollTop = newHeight - prevScrollHeight + prevScrollTop;
       }
     });
@@ -227,12 +306,101 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
 
     // scroll to bottom (after snapshot updates usually)
     requestAnimationFrame(() => {
-      // a small timeout can help ensure message appears
       setTimeout(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 60);
     });
   };
+
+  // ----------------------
+  // Image upload / send
+  // ----------------------
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.currentTarget.value = ""; // clear selection
+    await uploadAndSendImage(file);
+  };
+
+  const uploadAndSendImage = async (file: File) => {
+    if (!chatId || !currentUid) return;
+    try {
+      setUploading(true);
+      setUploadProgress(0);
+
+      const storage = getStorage();
+      const path = `/chat_media/${chatId}/${Date.now()}_${file.name}`;
+      const imgRef = storageRef(storage, path);
+      const uploadTask = uploadBytesResumable(imgRef, file);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const prog = Math.round(
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          );
+          setUploadProgress(prog);
+        },
+        (err) => {
+          console.error("Upload error", err);
+          setUploading(false);
+          setUploadProgress(null);
+        },
+        async () => {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+
+          // send image message (text optional)
+          await addDoc(collection(db, "chats", chatId, "messages"), {
+            text: "", // no text
+            imageUrl: url,
+            senderId: currentUid,
+            deleted: false,
+            timestamp: serverTimestamp(),
+          });
+
+          // update chat meta (show image placeholder)
+          await setDoc(
+            doc(db, "chats", chatId),
+            {
+              participants: [currentUid, friendUid].sort(),
+              lastMessage: "[Image]",
+              updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
+
+          // scroll to bottom after send
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, 120);
+          });
+
+          setUploading(false);
+          setUploadProgress(null);
+        }
+      );
+    } catch (err) {
+      console.error(err);
+      setUploading(false);
+      setUploadProgress(null);
+    }
+  };
+
+  // // Ensure chat meta exists on first open (optional, for new chats)
+  // useEffect(() => {
+  //   const ensureChatMeta = async () => {
+  //     const chatDocRef = doc(db, "chats", chatId);
+  //     const chatDoc = await getDocs(collection(db, "chats")); // no-op guard
+  //     // keep previous behavior: create chat doc only when writing messages/setting meta
+  //   };
+  //   // noop - existing flows create meta when sending
+  //   // eslint-disable-next-line
+  // }, [chatId]);
 
   return (
     <div className="d-flex flex-column h-100">
@@ -288,50 +456,209 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
           </div>
         </div>
         {loadingMore && <Loading />}
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`d-flex flex-column mb-2 ${
-              m.senderId === currentUid
-                ? "align-items-end"
-                : "align-items-start"
-            }`}
-          >
-            {/* Nội dung tin nhắn */}
+        {messages.map((m) => {
+          // compute image index if this message contains image
+          const imgIndex = m.imageUrl
+            ? images.findIndex((img) => img.id === m.id)
+            : -1;
+          return (
             <div
-              className={`p-2 rounded-3 shadow ${
+              key={m.id}
+              className={`d-flex flex-column mb-2 ${
                 m.senderId === currentUid
-                  ? "bg-success bg-opacity-75 text-white"
-                  : "bg-white border"
+                  ? "align-items-end"
+                  : "align-items-start"
               }`}
-              style={{ maxWidth: "70%" }}
             >
-              <div style={{ whiteSpace: "pre-wrap" }}>{m.text}</div>
-            </div>
+              {/* Nội dung tin nhắn */}
+              <div
+                className={`p-2 rounded-3 shadow ${
+                  m.senderId === currentUid
+                    ? "bg-success bg-opacity-75 text-white"
+                    : "bg-white border"
+                }`}
+                style={{ maxWidth: "70%" }}
+              >
+                {m.imageUrl ? (
+                  <img
+                    src={m.imageUrl}
+                    alt="sent"
+                    className="img-fluid rounded mb-2"
+                    style={{
+                      maxWidth: "200px",
+                      height: "auto",
+                      cursor: "zoom-in",
+                    }}
+                    onClick={() => imgIndex >= 0 && openImageViewer(imgIndex)}
+                  />
+                ) : null}
+                <div style={{ whiteSpace: "pre-wrap" }}>{m.text}</div>
+              </div>
 
-            {/* Timestamp bên ngoài */}
-            <small
-              className="text-muted mt-1 mx-1"
-              style={{ fontSize: "0.75rem" }}
-            >
-              {m.timestamp
-                ? m.timestamp.toDate().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : ""}
-            </small>
-          </div>
-        ))}
+              {/* Timestamp bên ngoài */}
+              <small
+                className="text-muted mt-1 mx-1"
+                style={{ fontSize: "0.75rem" }}
+              >
+                {m.timestamp
+                  ? m.timestamp.toDate().toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : ""}
+              </small>
+            </div>
+          );
+        })}
 
         <div ref={chatEndRef} />
       </div>
 
+      {/* Image viewer overlay */}
+      {imageViewerOpen && images.length > 0 && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ zIndex: 2000, background: "rgba(0,0,0,0.8)" }}
+          onClick={(e) => {
+            // close when clicking backdrop (not the image area)
+            if (e.target === e.currentTarget) closeImageViewer();
+          }}
+        >
+          <div
+            className="position-relative bg-dark text-white"
+            style={{
+              width: "90%",
+              height: "90%",
+              maxWidth: 1200,
+              maxHeight: 900,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {/* Toolbar */}
+            <div className="d-flex justify-content-between align-items-center p-2 border-bottom">
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-sm btn-light"
+                  onClick={showPrevImage}
+                  disabled={imageViewerIndex === 0}
+                >
+                  <i className="bi bi-chevron-left" />
+                </button>
+                <button
+                  className="btn btn-sm btn-light"
+                  onClick={showNextImage}
+                  disabled={imageViewerIndex === images.length - 1}
+                >
+                  <i className="bi bi-chevron-right" />
+                </button>
+                <button
+                  className="btn btn-sm btn-light"
+                  onClick={zoomOut}
+                  title="Zoom out"
+                >
+                  -
+                </button>
+                <button
+                  className="btn btn-sm btn-light"
+                  onClick={resetZoom}
+                  title="Reset zoom"
+                >
+                  100%
+                </button>
+                <button
+                  className="btn btn-sm btn-light"
+                  onClick={zoomIn}
+                  title="Zoom in"
+                >
+                  +
+                </button>
+              </div>
+
+              <div className="d-flex gap-2 align-items-center">
+                <button
+                  className="btn btn-sm btn-outline-light"
+                  onClick={() => downloadImage(images[imageViewerIndex].url)}
+                  title="Download image"
+                >
+                  <i className="bi bi-download" />
+                </button>
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={closeImageViewer}
+                  title="Close"
+                >
+                  <i className="bi bi-x-lg" />
+                </button>
+              </div>
+            </div>
+
+            {/* Image container with scrollbars if overflow */}
+            <div
+              className="flex-grow-1 d-flex align-items-center justify-content-center"
+              style={{ overflow: "auto", background: "#111" }}
+            >
+              <div
+                style={{
+                  transform: `scale(${imageZoom})`,
+                  transformOrigin: "center center",
+                  display: "inline-block",
+                }}
+              >
+                <img
+                  src={images[imageViewerIndex].url}
+                  alt="preview"
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "80vh",
+                    display: "block",
+                    margin: "0 auto",
+                    objectFit: "contain",
+                  }}
+                />
+              </div>
+            </div>
+            {/* footer: show index */}
+            <div className="p-2 text-center text-white-50 small border-top">
+              {imageViewerIndex + 1} / {images.length}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
-      <div className="p-3 d-flex">
-        <button className="btn btn-light me-2">
+      <div className="p-3 d-flex align-items-center">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={handleFileChange}
+        />
+
+        <button
+          className="btn btn-light me-2"
+          onClick={handleImageClick}
+          disabled={uploading}
+          title="Send image"
+        >
           <i className="bi bi-image"></i>
         </button>
+
+        {uploading && uploadProgress != null && (
+          <div className="me-2">
+            <div className="progress" style={{ width: 120, height: 8 }}>
+              <div
+                className="progress-bar"
+                role="progressbar"
+                style={{ width: `${uploadProgress}%` }}
+                aria-valuenow={uploadProgress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="input-group">
           <input
