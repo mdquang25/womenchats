@@ -630,9 +630,9 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
                   style={{ wordBreak: "break-word" }}
                 >
                   {m.deleted ? (
-                    <em className="text-muted">message was deleted</em>
+                    <em className="text-muted">tin nhắn đã bị xóa</em>
                   ) : editingMsgId === m.id ? (
-                    <div className="d-flex gap-2 align-items-center">
+                    <div className="d-flex flex-column gap-2 align-items-center">
                       <input
                         className="form-control form-control-sm"
                         value={editingText}
@@ -643,13 +643,13 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
                           className="btn btn-sm btn-primary"
                           onClick={() => saveEdit(m)}
                         >
-                          Save
+                          Lưu
                         </button>
                         <button
                           className="btn btn-sm btn-secondary"
                           onClick={cancelEdit}
                         >
-                          Cancel
+                          Hủy
                         </button>
                       </div>
                     </div>
