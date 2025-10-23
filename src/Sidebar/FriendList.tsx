@@ -99,8 +99,10 @@ function FriendList() {
           filtered.map((user) => (
             <div
               key={user.uid}
-              className="p-2 border-bottom d-flex align-items-center hover-bg"
-              style={{ cursor: "pointer" }}
+              className="p-2 border-bottom d-flex align-items-center item-hover"
+              style={{
+                cursor: "pointer",
+              }}
             >
               <div className="me-1">
                 <img

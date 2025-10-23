@@ -162,11 +162,11 @@ function ChatList({ onSelectUser, show }: ChatListProps) {
           filtered.map((user) => (
             <div
               key={user.uid}
-              className={`p-2 border-bottom d-flex align-items-center`}
+              className={`p-2 border-bottom d-flex align-items-center item-hover ${
+                selectedUid === user.uid ? "item-selected" : ""
+              }`}
               style={{
                 cursor: "pointer",
-                backgroundColor:
-                  selectedUid === user.uid ? "#e7f1ff" : "transparent", // 👈 hiệu ứng chọn
               }}
               onClick={() => {
                 setSelectedUid(user.uid); // cập nhật state chọn

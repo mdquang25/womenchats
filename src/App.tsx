@@ -104,26 +104,9 @@ function App() {
       </>
     );
   }
-  if (showWelcome) {
-    return (
-      <>
-        <WelcomeScreen
-          onLogin={() => setShowWelcome(false)}
-          showToast={showToast}
-        />
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
-      </>
-    );
-  }
   return (
     <>
-      <MainScreen />
+      {!showWelcome && <MainScreen />}
       <AppFCM />
       {toast && (
         <Toast
@@ -131,6 +114,21 @@ function App() {
           type={toast.type}
           onClose={() => setToast(null)}
         />
+      )}
+      {showWelcome && (
+        <>
+          <WelcomeScreen
+            onLogin={() => setShowWelcome(false)}
+            showToast={showToast}
+          />
+          {toast && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)}
+            />
+          )}
+        </>
       )}
     </>
   );

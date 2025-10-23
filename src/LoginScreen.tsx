@@ -125,7 +125,9 @@ function LoginScreen({
         </div>
 
         <div className="mb-3">
-          <label className="form-label fw-semibold">Mật khẩu</label>
+          <label className="form-label fw-semibold">
+            {isRegister ? "Tạo mật khẩu mới" : "Mật khẩu đăng nhập"}
+          </label>
           <div className="input-group border-0 shadow-sm">
             <input
               className="form-control border-0"
