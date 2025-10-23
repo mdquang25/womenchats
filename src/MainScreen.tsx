@@ -8,7 +8,7 @@ import { doc, getDoc } from "firebase/firestore";
 
 function MainScreen() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userData, setUserData] = useState<User | null>(null);
   const currentUid = auth.currentUser?.uid;
 
@@ -28,7 +28,13 @@ function MainScreen() {
   }, [currentUid]);
 
   return (
-    <div className="d-flex" style={{ height: "100vh" }}>
+    <div
+      className="d-flex flex-column flex-md-row"
+      style={{
+        height: "100dvh", // dùng 100dvh an toàn hơn 100vh trên mobile
+        overflow: "hidden",
+      }}
+    >
       {/* Sidebar */}
       <Sidebar
         userData={userData}

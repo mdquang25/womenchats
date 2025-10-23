@@ -885,7 +885,7 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
                     }}
                     style={{
                       maxWidth: "100%",
-                      maxHeight: "80vh",
+                      maxHeight: "100vh",
                       objectFit: "contain",
                       cursor: imageZoom > 1 ? "grab" : "zoom-in",
                     }}
@@ -985,7 +985,13 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
       </AnimatePresence>
 
       {/* Input */}
-      <div className="p-3 d-flex gap-2 align-items-center">
+      <div
+        className="p-2 p-md-3 d-flex gap-2 align-items-center border-top bg-white"
+        style={{
+          position: "sticky",
+          bottom: 0,
+        }}
+      >
         <input
           ref={fileInputRef}
           type="file"
@@ -1026,7 +1032,8 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             />
             <button
-              className="btn btn-success rounded-pill ms-2"
+              className="btn btn-success rounded-pill ms-2 px-3 py-2"
+              style={{ flexShrink: 0 }}
               onClick={sendMessage}
               aria-label="Send"
             >
