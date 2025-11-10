@@ -3,7 +3,7 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main    # chỉ deploy khi push vào branch main (có thể đổi nếu muốn)
+      - main
 
 jobs:
   build_and_deploy:
@@ -24,10 +24,7 @@ jobs:
       - name: Build project
         run: npm run build
 
+      # 👇 Bước deploy tách riêng, dùng secret token
       - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_TOKEN }}"
-          channelId: live
-          projectId: projectchat3-b0aa1   # 👈 đổi thành ID project Firebase của bạn
+        run: |
+          npx firebase deploy --only hosting:womenchats --project projectchat3-b0aa1 --token "${{ secrets.FIREBASE_TOKEN }}"
