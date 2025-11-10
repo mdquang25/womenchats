@@ -2,16 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ========== USERS ==========
     match /users/{userId} {
       allow read: if request.auth != null
         && request.auth.token.email_verified == true;
       allow create, update, delete: if request.auth != null
-      && request.auth.uid == userId
-      && request.auth.token.email_verified == true;
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true;
     }
 
-    // ========== FRIENDSHIPS ==========
     match /friendships/{fid} {
       allow read: if request.auth != null
         && request.auth.token.email_verified == true
@@ -25,18 +23,15 @@ service cloud.firestore {
       allow update: if request.auth != null
         && request.auth.token.email_verified == true
         && request.auth.uid in resource.data.participants
-        && (
-          (resource.data.status == "pending"
-            && request.resource.data.status == "accepted"
-            && request.auth.uid != resource.data.requestBy)
-        );
+        && (resource.data.status == "pending"
+          && request.resource.data.status == "accepted"
+          && request.auth.uid != resource.data.requestBy);
 
       allow delete: if request.auth != null
         && request.auth.token.email_verified == true
         && request.auth.uid in resource.data.participants;
     }
 
-    // ========== CHATS ==========
     match /chats/{chatId} {
       allow read: if request.auth != null
         && request.auth.token.email_verified == true
@@ -53,7 +48,6 @@ service cloud.firestore {
 
       allow delete: if false;
 
-      // ----- MESSAGES -----
       match /messages/{messageId} {
         allow read: if request.auth != null
           && request.auth.token.email_verified == true
@@ -64,7 +58,6 @@ service cloud.firestore {
           && request.auth.uid == request.resource.data.senderId
           && isFriend(get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
 
-        // Sender có thể update text, deleted, timestamp
         allow update: if request.auth != null
           && request.auth.token.email_verified == true
           && request.auth.uid == resource.data.senderId
@@ -75,9 +68,8 @@ service cloud.firestore {
       }
     }
 
-    // ========== SUPPORT FUNCTION ==========
     function isFriend(participants) {
-      let friendshipId = participants[0] < participants[1]
+      var friendshipId = participants[0] < participants[1]
         ? participants[0] + "_" + participants[1]
         : participants[1] + "_" + participants[0];
 

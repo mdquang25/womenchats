@@ -897,7 +897,7 @@ function ChatBox({ selectedUser, onMenuClick }: ChatBoxProps) {
                     animate={{
                       opacity: 1,
                       x: 0,
-                      scale: imageZoom, // 👈 zoom giờ nằm ở đây
+                      scale: imageZoom, // zoom giờ nằm ở đây
                     }}
                     exit={{
                       opacity: 0,

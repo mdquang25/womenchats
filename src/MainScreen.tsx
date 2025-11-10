@@ -69,6 +69,16 @@ function MainScreen() {
             {/* Messages */}
             <div className="flex-grow-1 p-3 overflow-auto align-items-center d-flex justify-content-center">
               <div className="text-muted">
+                <img
+                  src={
+                    userData?.avatarUrl ||
+                    "https://cdn2.fptshop.com.vn/unsafe/800x0/meme_cho_1_e568e5b1a5.jpg"
+                  }
+                  alt="Ảnh đại diện"
+                  title="ảnh đại diện người dùng"
+                  className="img-fluid rounded-circle mx-auto d-block mb-2"
+                  style={{ width: 200, height: 200, objectFit: "cover" }}
+                />
                 Chọn một cuộc trò chuyện để bắt đầu
               </div>
             </div>
